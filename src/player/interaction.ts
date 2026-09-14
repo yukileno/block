@@ -54,7 +54,7 @@ export class BlockInteraction {
     this.controller = controller;
 
     domElement.addEventListener("mousedown", (e) => {
-      if (!this.controller.isActive) return;
+      if (!this.controller.isActive || this.controller.isInventoryOpen) return;
 
       if (this.controller.isLocked) {
         const action =

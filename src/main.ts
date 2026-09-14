@@ -11,6 +11,7 @@ import { PlayerController } from "./player/controller";
 import { BlockInteraction } from "./player/interaction";
 import { Hotbar } from "./ui/hotbar";
 import { Hud } from "./ui/hud";
+import { Inventory } from "./ui/inventory";
 import { isTouchDevice, TouchControls } from "./ui/touch-controls";
 import { EditStore } from "./world/edit-store";
 import { findPleasantSpawn } from "./world/spawn";
@@ -180,6 +181,13 @@ function boot(): void {
 
   const player = new PlayerController(view.camera, view.domElement, world, spawn.x, spawn.z);
   const hotbar = new Hotbar(hotbarContainer, atlas.canvas);
+  const inventory = new Inventory(app, hotbar, atlas.canvas);
+  inventory.onToggle = (isOpen) => {
+    player.setInventoryOpen(isOpen);
+  };
+  hotbar.onOpenInventory = () => {
+    inventory.open();
+  };
   const interaction = new BlockInteraction(
     view.camera,
     view.domElement,

@@ -77,6 +77,27 @@ export class PlayerController {
     this.syncCamera();
   }
 
+  private _isInventoryOpen = false;
+
+  public setInventoryOpen(open: boolean): void {
+    this._isInventoryOpen = open;
+    if (open) {
+      this.pressed.clear();
+      this.dragging = false;
+      if (document.pointerLockElement === this.domElement) {
+        document.exitPointerLock?.();
+      }
+    } else {
+      if (this.controlMode === "pointer") {
+        this.requestControl();
+      }
+    }
+  }
+
+  public get isInventoryOpen(): boolean {
+    return this._isInventoryOpen;
+  }
+
   private enterMode(mode: ControlMode): void {
     this.controlMode = mode;
     this.overlay?.classList.toggle("hidden", mode !== "idle");
@@ -94,12 +115,13 @@ export class PlayerController {
       if (locked) {
         if (this.lockWatchdog) clearTimeout(this.lockWatchdog);
         this.enterMode("pointer");
-      } else if (this.controlMode === "pointer") {
+      } else if (this.controlMode === "pointer" && !this._isInventoryOpen) {
         this.enterMode("idle");
       }
     });
 
     document.addEventListener("mousemove", (e) => {
+      if (this._isInventoryOpen) return;
       if (this.controlMode === "pointer") {
         this.applyLook(e.movementX, e.movementY, MOUSE_SENSITIVITY);
       } else if (this.controlMode === "drag" && this.dragging) {
@@ -108,6 +130,7 @@ export class PlayerController {
     });
 
     this.domElement.addEventListener("mousedown", (e) => {
+      if (this._isInventoryOpen) return;
       if (this.controlMode === "drag" && e.button === 0) this.dragging = true;
     });
     document.addEventListener("mouseup", (e) => {
@@ -115,6 +138,7 @@ export class PlayerController {
     });
 
     document.addEventListener("keydown", (e) => {
+      if (this._isInventoryOpen) return;
       if (e.code === "Escape" && this.controlMode === "drag") {
         this.enterMode("idle");
         return;
@@ -225,7 +249,7 @@ export class PlayerController {
   }
 
   update(dt: number): void {
-    if (this.controlMode !== "idle") {
+    if (this.controlMode !== "idle" && !this._isInventoryOpen) {
       const { forward, right, jump, sprint } = this.currentInput();
       this.state = stepPhysics(
         this.state,

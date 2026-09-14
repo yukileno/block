@@ -245,3 +245,176 @@ canvas {
     bottom: calc(max(12px, env(safe-area-inset-bottom)) + 64px);
   }
 }
+
+/* ==========================================================================
+   Minecraft-style Inventory GUI
+   ========================================================================== */
+
+.inventory-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.inventory-modal.hidden {
+  display: none !important;
+}
+
+.inventory-window {
+  background: #c6c6c6;
+  border: 4px solid #fff;
+  border-right-color: #555;
+  border-bottom-color: #555;
+  box-shadow:
+    0 0 20px rgba(0, 0, 0, 0.8),
+    inset 2px 2px 0 #dbdbdb,
+    inset -2px -2px 0 #555;
+  padding: 16px 20px;
+  width: min(92vw, 480px);
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #3f3f3f;
+  font-family: "Courier New", Courier, monospace, sans-serif;
+  font-weight: bold;
+}
+
+.inventory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #555;
+  padding-bottom: 8px;
+}
+
+.inventory-title {
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+
+.inventory-close-btn {
+  background: #c6c6c6;
+  border: 2px solid #fff;
+  border-right-color: #555;
+  border-bottom-color: #555;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 2px 8px;
+  line-height: 1;
+}
+
+.inventory-close-btn:active {
+  border-color: #555 #fff #fff #555;
+}
+
+.inventory-section-title {
+  font-size: 13px;
+  color: #404040;
+}
+
+.inventory-palette-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 6px;
+  background: #8b8b8b;
+  border: 2px solid #373737;
+  border-right-color: #fff;
+  border-bottom-color: #fff;
+  padding: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.inventory-hotbar-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 4px;
+  background: #8b8b8b;
+  border: 2px solid #373737;
+  border-right-color: #fff;
+  border-bottom-color: #fff;
+  padding: 8px;
+}
+
+.inv-slot {
+  position: relative;
+  aspect-ratio: 1;
+  background: #8b8b8b;
+  border: 2px solid #373737;
+  border-right-color: #fff;
+  border-bottom-color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+}
+
+.inv-slot:hover {
+  background: #a0a0a0;
+  border-color: #fff #373737 #373737 #fff;
+}
+
+.inv-slot:active {
+  background: #737373;
+}
+
+.inv-slot.target-selected {
+  outline: 2px solid #ffd700;
+  box-shadow: 0 0 6px #ffd700;
+}
+
+.inv-key-label {
+  position: absolute;
+  top: 1px;
+  left: 3px;
+  font-size: 10px;
+  color: #fff;
+  text-shadow: 1px 1px 0 #000;
+  pointer-events: none;
+}
+
+/* Tooltip on hover */
+.inv-slot[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #100010;
+  color: #ffffff;
+  border: 2px solid #2b0066;
+  padding: 4px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.inventory-footer {
+  font-size: 11px;
+  color: #666;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.hotbar-inv-btn {
+  cursor: pointer;
+  border-color: rgba(255, 215, 0, 0.6) !important;
+  background-color: rgba(60, 50, 10, 0.6) !important;
+}
+
+.hotbar-inv-btn:hover {
+  border-color: #ffd700 !important;
+  transform: scale(1.08);
+}

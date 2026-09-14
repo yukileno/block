@@ -7,7 +7,7 @@ import { BlockId } from "../world/blocks";
  * table instead of being scattered through the meshing loop. */
 
 export const ATLAS_TILE_SIZE = 16;
-export const ATLAS_GRID_SIZE = 4;
+export const ATLAS_GRID_SIZE = 8;
 export const ATLAS_PIXELS = ATLAS_TILE_SIZE * ATLAS_GRID_SIZE;
 
 export const TileKind = {
@@ -22,6 +22,23 @@ export const TileKind = {
   LEAVES: 8,
   BEDROCK: 9,
   SNOW: 10,
+  COBBLESTONE: 11,
+  PLANKS: 12,
+  BRICK: 13,
+  GLASS: 14,
+  GRAVEL: 15,
+  ICE: 16,
+  CLAY: 17,
+  IRON_BLOCK: 18,
+  GOLD_BLOCK: 19,
+  DIAMOND_BLOCK: 20,
+  OBSIDIAN: 21,
+  BOOKSHELF_SIDE: 22,
+  GLOWSTONE: 23,
+  WOOL_RED: 24,
+  WOOL_BLUE: 25,
+  WOOL_YELLOW: 26,
+  WOOL_GREEN: 27,
 } as const;
 
 export type TileKind = (typeof TileKind)[keyof typeof TileKind];
@@ -66,6 +83,40 @@ export function tileForBlockFace(id: BlockId, face: Face): TileKind {
       return TileKind.BEDROCK;
     case BlockId.SNOW:
       return TileKind.SNOW;
+    case BlockId.COBBLESTONE:
+      return TileKind.COBBLESTONE;
+    case BlockId.PLANKS:
+      return TileKind.PLANKS;
+    case BlockId.BRICK:
+      return TileKind.BRICK;
+    case BlockId.GLASS:
+      return TileKind.GLASS;
+    case BlockId.GRAVEL:
+      return TileKind.GRAVEL;
+    case BlockId.ICE:
+      return TileKind.ICE;
+    case BlockId.CLAY:
+      return TileKind.CLAY;
+    case BlockId.IRON_BLOCK:
+      return TileKind.IRON_BLOCK;
+    case BlockId.GOLD_BLOCK:
+      return TileKind.GOLD_BLOCK;
+    case BlockId.DIAMOND_BLOCK:
+      return TileKind.DIAMOND_BLOCK;
+    case BlockId.OBSIDIAN:
+      return TileKind.OBSIDIAN;
+    case BlockId.BOOKSHELF:
+      return face === "top" || face === "bottom" ? TileKind.PLANKS : TileKind.BOOKSHELF_SIDE;
+    case BlockId.GLOWSTONE:
+      return TileKind.GLOWSTONE;
+    case BlockId.WOOL_RED:
+      return TileKind.WOOL_RED;
+    case BlockId.WOOL_BLUE:
+      return TileKind.WOOL_BLUE;
+    case BlockId.WOOL_YELLOW:
+      return TileKind.WOOL_YELLOW;
+    case BlockId.WOOL_GREEN:
+      return TileKind.WOOL_GREEN;
     case BlockId.AIR:
       return TileKind.STONE; // never sampled — the mesher skips air outright
   }
