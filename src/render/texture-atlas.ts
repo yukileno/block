@@ -205,12 +205,12 @@ function paintTileAt(
     // Colorful books on top shelf
     const bookColors = ["#b03a2e", "#2e7d32", "#1565c0", "#e67e22", "#8e44ad", "#d35400"];
     for (let bi = 0; bi < 5; bi++) {
-      ctx.fillStyle = bookColors[bi % bookColors.length];
+      ctx.fillStyle = bookColors[bi % bookColors.length] ?? "#b03a2e";
       ctx.fillRect(x + 1 + bi * 3, y + 1, 2, 6);
     }
     // Bottom shelf
     for (let bi = 0; bi < 5; bi++) {
-      ctx.fillStyle = bookColors[(bi + 3) % bookColors.length];
+      ctx.fillStyle = bookColors[(bi + 3) % bookColors.length] ?? "#2e7d32";
       ctx.fillRect(x + 1 + bi * 3, y + 9, 2, 6);
     }
   }
