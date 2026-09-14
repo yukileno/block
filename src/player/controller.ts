@@ -85,7 +85,7 @@ export class PlayerController {
       this.pressed.clear();
       this.dragging = false;
       if (document.pointerLockElement === this.domElement) {
-        document.exitPointerLock?.();
+        document.exitPointerLock();
       }
     } else {
       if (this.controlMode === "pointer") {
