@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#87ceeb" />
+    <meta
+      name="description"
+      content="A Minecraft-inspired voxel world in the browser: infinite procedural terrain, break and place blocks, no install."
+    />
+    <title>block</title>
+  </head>
+  <body>
+    <div id="app">
+      <div id="crosshair" aria-hidden="true"></div>
+      <div id="hotbar"></div>
+      <div id="overlay">
+        <div id="overlay-content">
+          <h1>block</h1>
+          <p class="controls-desktop">
+            WASD to move &middot; mouse to look &middot; space to jump<br />
+            left click breaks a block &middot; right click places one<br />
+            1-9 or scroll to pick a block
+          </p>
+          <p class="controls-touch">
+            left thumb to move &middot; drag the right side to look<br />
+            tap to break &middot; the buttons jump and place<br />
+            tap a slot to pick a block
+          </p>
+          <button id="play-button" type="button">Tap to play</button>
+          <p style="margin-top: 18px; font-size: 11px; opacity: 0.6; line-height: 1.4;">
+            Not an official Minecraft product.<br />
+            Not approved by or associated with Mojang or Microsoft.
+          </p>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
