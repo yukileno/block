@@ -116,11 +116,14 @@ canvas {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(10, 12, 20, 0.75);
+  background: rgba(10, 12, 20, 0.82);
   color: #fff;
   text-align: center;
   z-index: 10;
   transition: opacity 0.2s ease;
+  backdrop-filter: blur(4px);
+  padding: 16px;
+  box-sizing: border-box;
 }
 
 #overlay.hidden {
@@ -128,29 +131,289 @@ canvas {
   pointer-events: none;
 }
 
-#overlay-content h1 {
-  margin: 0 0 8px;
-  font-size: 2rem;
+.overlay-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 720px;
+  width: 100%;
+  animation: fadeIn 0.25s ease-out;
 }
 
-#overlay-content p {
-  margin: 4px 0;
-  opacity: 0.85;
+.overlay-screen.hidden {
+  display: none !important;
 }
 
-#play-button {
-  margin-top: 16px;
-  padding: 10px 24px;
-  font-size: 1rem;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ==========================================================================
+   Screen 1: Mode Select (でかデカ 2ボタン)
+   ========================================================================== */
+
+.game-title {
+  font-size: 2.2rem;
+  font-weight: 900;
+  margin: 0 0 6px 0;
+  color: #f1c40f;
+  text-shadow:
+    2px 2px 0 #000,
+    0 0 12px rgba(241, 196, 15, 0.5);
+  letter-spacing: 1px;
+}
+
+.game-subtitle {
+  font-size: 1.1rem;
+  color: #ecf0f1;
+  margin: 0 0 24px 0;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px #000;
+}
+
+.mode-select-grid {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 640px;
+}
+
+.mode-card-btn {
+  flex: 1 1 260px;
+  min-height: 180px;
+  border-radius: 14px;
+  border: 4px solid rgba(255, 255, 255, 0.9);
   cursor: pointer;
-  border: none;
-  border-radius: 4px;
-  background: #4caf50;
-  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  box-sizing: border-box;
+  text-align: center;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  user-select: none;
 }
 
-#play-button:hover {
-  background: #5cbf60;
+.mode-card-btn:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+}
+
+.mode-card-btn:active {
+  transform: translateY(2px) scale(0.98);
+}
+
+.mode-card-math {
+  background: linear-gradient(145deg, #f39c12, #d35400);
+  border-right-color: #b9770e;
+  border-bottom-color: #a04000;
+}
+
+.mode-card-math:hover {
+  border-color: #fff #d35400 #d35400 #fff;
+}
+
+.mode-card-build {
+  background: linear-gradient(145deg, #27ae60, #196f3d);
+  border-right-color: #1e8449;
+  border-bottom-color: #145a32;
+}
+
+.mode-card-build:hover {
+  border-color: #fff #1e8449 #1e8449 #fff;
+}
+
+.mode-card-icon {
+  font-size: 52px;
+  line-height: 1;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
+}
+
+.mode-card-title {
+  font-size: 24px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.6);
+  margin-bottom: 6px;
+}
+
+.mode-card-desc {
+  font-size: 13px;
+  color: #fef9e7;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.disclaimer-text {
+  margin-top: 24px;
+  font-size: 11px;
+  opacity: 0.65;
+  line-height: 1.4;
+  color: #bdc3c7;
+}
+
+/* ==========================================================================
+   Screen 2: Controls Guide (日本語の動かし方)
+   ========================================================================== */
+
+.guide-header {
+  margin-bottom: 14px;
+}
+
+.guide-title {
+  font-size: 24px;
+  font-weight: 900;
+  margin: 0 0 4px 0;
+  color: #2ecc71;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.guide-subtitle {
+  font-size: 13px;
+  color: #bdc3c7;
+  margin: 0;
+}
+
+.guide-content {
+  background: rgba(30, 39, 46, 0.9);
+  border: 2px solid #576574;
+  border-radius: 12px;
+  padding: 16px 20px;
+  max-width: 520px;
+  width: 100%;
+  box-sizing: border-box;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.guide-section-title {
+  font-size: 15px;
+  font-weight: bold;
+  color: #f1c40f;
+  margin-bottom: 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding-bottom: 6px;
+}
+
+.guide-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.guide-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.key-group {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.key-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 2px 8px;
+  background: #dfe6e9;
+  color: #2d3436;
+  font-size: 13px;
+  font-weight: 900;
+  border-radius: 4px;
+  border: 2px solid #fff;
+  border-bottom: 3px solid #b2bec3;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.key-badge.mouse-badge,
+.key-badge.touch-badge {
+  background: #ffeaa7;
+  color: #d35400;
+  border-bottom-color: #fdcb6e;
+}
+
+.guide-label {
+  color: #ecf0f1;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.guide-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 18px;
+  width: 100%;
+}
+
+.guide-btn-back {
+  background: #7f8c8d;
+  color: #fff;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 8px;
+  border: 2px solid #bdc3c7;
+  border-bottom: 3px solid #57606f;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.guide-btn-back:hover {
+  background: #95a5a6;
+}
+
+.guide-btn-back:active {
+  transform: translateY(2px);
+}
+
+.guide-btn-start {
+  background: #27ae60;
+  color: #fff;
+  padding: 12px 32px;
+  font-size: 17px;
+  font-weight: 900;
+  border-radius: 8px;
+  border: 3px solid #2ecc71;
+  border-bottom: 4px solid #196f3d;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(39, 174, 96, 0.4);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.guide-btn-start:hover {
+  background: #2ecc71;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(39, 174, 96, 0.6);
+}
+
+.guide-btn-start:active {
+  transform: translateY(2px);
 }
 
 #fps {
@@ -484,6 +747,16 @@ canvas {
 .mode-btn-build.active {
   background: #27ae60;
   box-shadow: 0 0 12px rgba(39, 174, 96, 0.7);
+}
+
+.mode-btn-help {
+  background: #2c3e50;
+  border-color: #7f8c8d;
+}
+
+.mode-btn-help:hover {
+  background: #34495e;
+  border-color: #bdc3c7;
 }
 
 /* ==========================================================================

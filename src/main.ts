@@ -196,6 +196,9 @@ function boot(): void {
       mathBtn.classList.toggle("active", isOpen);
       buildBtn.classList.toggle("active", !isOpen);
     }
+    if (!isOpen && !player.isActive) {
+      showControlsGuide();
+    }
   };
 
   hotbar.onOpenInventory = () => {
@@ -206,6 +209,51 @@ function boot(): void {
     mathModal.open();
   };
 
+  // Overlay Screens & Navigation
+  const overlay = document.querySelector<HTMLDivElement>("#overlay");
+  const screenModeSelect = document.querySelector<HTMLDivElement>("#screen-mode-select");
+  const screenControlsGuide = document.querySelector<HTMLDivElement>("#screen-controls-guide");
+
+  function showModeSelect(): void {
+    screenControlsGuide?.classList.add("hidden");
+    screenModeSelect?.classList.remove("hidden");
+    overlay?.classList.remove("hidden");
+  }
+
+  function showControlsGuide(): void {
+    screenModeSelect?.classList.add("hidden");
+    screenControlsGuide?.classList.remove("hidden");
+    overlay?.classList.remove("hidden");
+  }
+
+  // 1. Initial Mode Selection buttons
+  document.querySelector("#btn-start-math")?.addEventListener("click", () => {
+    overlay?.classList.add("hidden");
+    inventory.close();
+    mathModal.open();
+  });
+
+  document.querySelector("#btn-start-build")?.addEventListener("click", () => {
+    // 建築を選んだ時に最初に日本語で動かし方を出す
+    showControlsGuide();
+  });
+
+  // 2. Controls Guide buttons
+  document.querySelector("#btn-guide-back")?.addEventListener("click", () => {
+    showModeSelect();
+  });
+
+  document.querySelector("#btn-enter-world")?.addEventListener("click", () => {
+    player.requestControl();
+  });
+
+  // When player exits pointer lock / goes idle, show controls guide (pause screen)
+  player.onEnterIdle = () => {
+    if (!mathModal.isOpen && !inventory.isOpen) {
+      showControlsGuide();
+    }
+  };
+
   // Top Mode Switcher Bar
   const modeSwitcher = document.createElement("div");
   modeSwitcher.id = "mode-switcher";
@@ -213,6 +261,7 @@ function boot(): void {
   modeSwitcher.innerHTML = `
     <button type="button" id="btn-mode-math" class="mode-btn mode-btn-math">✏️ もんだい (ブロック獲得)</button>
     <button type="button" id="btn-mode-build" class="mode-btn mode-btn-build active">🔨 けんちく</button>
+    <button type="button" id="btn-mode-help" class="mode-btn mode-btn-help" title="動かし方を見る">❓ そうさ方法</button>
   `;
   app.appendChild(modeSwitcher);
 
@@ -225,6 +274,17 @@ function boot(): void {
   document.querySelector("#btn-mode-build")?.addEventListener("click", (e) => {
     e.stopPropagation();
     mathModal.close();
+    if (!player.isActive) {
+      player.requestControl();
+    }
+  });
+
+  document.querySelector("#btn-mode-help")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    mathModal.close();
+    inventory.close();
+    player.exitControl();
+    showControlsGuide();
   });
   const interaction = new BlockInteraction(
     view.camera,

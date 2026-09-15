@@ -98,18 +98,18 @@ export class PlayerController {
     return this._isInventoryOpen;
   }
 
+  public onEnterIdle?: () => void;
+
   private enterMode(mode: ControlMode): void {
     this.controlMode = mode;
     this.overlay?.classList.toggle("hidden", mode !== "idle");
-    if (mode === "idle") this.pressed.clear();
+    if (mode === "idle") {
+      this.pressed.clear();
+      this.onEnterIdle?.();
+    }
   }
 
   private bindEvents(): void {
-    const playButton = document.querySelector<HTMLButtonElement>("#play-button");
-    playButton?.addEventListener("click", () => {
-      this.requestControl();
-    });
-
     document.addEventListener("pointerlockchange", () => {
       const locked = document.pointerLockElement === this.domElement;
       if (locked) {
@@ -162,10 +162,18 @@ export class PlayerController {
     });
   }
 
+  /** Exits pointer lock and returns to idle mode. */
+  public exitControl(): void {
+    if (document.pointerLockElement === this.domElement) {
+      document.exitPointerLock();
+    }
+    this.enterMode("idle");
+  }
+
   /** Ask for pointer lock; if the browser quietly never grants it, fall
    * back to drag-look so the game starts regardless. Touch-first devices
    * skip the pointer-lock dance entirely — there is no pointer to lock. */
-  private requestControl(): void {
+  public requestControl(): void {
     if (window.matchMedia("(pointer: coarse)").matches) {
       this.enterMode("drag");
       return;
