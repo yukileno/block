@@ -143,8 +143,12 @@ export class BlockInteraction {
     if (this.world.getBlock(hit.placeX, hit.placeY, hit.placeZ) !== BlockId.AIR) return;
     if (this.overlapsPlayer(hit.placeX, hit.placeY, hit.placeZ)) return;
 
-    this.world.setBlock(hit.placeX, hit.placeY, hit.placeZ, this.hotbar.selectedBlock);
-    this.onEdit?.(hit.placeX, hit.placeY, hit.placeZ, this.hotbar.selectedBlock);
+    if (!this.hotbar.hasSelectedBlock()) return;
+    const blockToPlace = this.hotbar.selectedBlock;
+    if (!this.hotbar.consumeSelectedBlock()) return;
+
+    this.world.setBlock(hit.placeX, hit.placeY, hit.placeZ, blockToPlace);
+    this.onEdit?.(hit.placeX, hit.placeY, hit.placeZ, blockToPlace);
     this.remesh(hit.placeX, hit.placeZ);
   }
 

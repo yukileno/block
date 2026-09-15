@@ -12,6 +12,7 @@ import { BlockInteraction } from "./player/interaction";
 import { Hotbar } from "./ui/hotbar";
 import { Hud } from "./ui/hud";
 import { Inventory } from "./ui/inventory";
+import { MathModal } from "./ui/math-modal";
 import { isTouchDevice, TouchControls } from "./ui/touch-controls";
 import { EditStore } from "./world/edit-store";
 import { findPleasantSpawn } from "./world/spawn";
@@ -182,12 +183,49 @@ function boot(): void {
   const player = new PlayerController(view.camera, view.domElement, world, spawn.x, spawn.z);
   const hotbar = new Hotbar(hotbarContainer, atlas.canvas);
   const inventory = new Inventory(app, hotbar, atlas.canvas);
+  const mathModal = new MathModal(app, hotbar, atlas.canvas);
+
   inventory.onToggle = (isOpen) => {
-    player.setInventoryOpen(isOpen);
+    player.setInventoryOpen(isOpen || mathModal.isOpen);
   };
+  mathModal.onToggle = (isOpen) => {
+    player.setInventoryOpen(isOpen || inventory.isOpen);
+    const mathBtn = document.querySelector("#btn-mode-math");
+    const buildBtn = document.querySelector("#btn-mode-build");
+    if (mathBtn && buildBtn) {
+      mathBtn.classList.toggle("active", isOpen);
+      buildBtn.classList.toggle("active", !isOpen);
+    }
+  };
+
   hotbar.onOpenInventory = () => {
+    mathModal.close();
     inventory.open();
   };
+  inventory.onOpenMath = () => {
+    mathModal.open();
+  };
+
+  // Top Mode Switcher Bar
+  const modeSwitcher = document.createElement("div");
+  modeSwitcher.id = "mode-switcher";
+  modeSwitcher.className = "mode-switcher";
+  modeSwitcher.innerHTML = `
+    <button type="button" id="btn-mode-math" class="mode-btn mode-btn-math">✏️ もんだい (ブロック獲得)</button>
+    <button type="button" id="btn-mode-build" class="mode-btn mode-btn-build active">🔨 けんちく</button>
+  `;
+  app.appendChild(modeSwitcher);
+
+  document.querySelector("#btn-mode-math")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    inventory.close();
+    mathModal.open();
+  });
+
+  document.querySelector("#btn-mode-build")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    mathModal.close();
+  });
   const interaction = new BlockInteraction(
     view.camera,
     view.domElement,

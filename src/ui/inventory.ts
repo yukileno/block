@@ -1,4 +1,4 @@
-﻿import { BlockId, BLOCKS, INVENTORY_BLOCKS } from "../world/blocks";
+import { BlockId, BLOCKS, INVENTORY_BLOCKS } from "../world/blocks";
 import { HOTBAR_SIZE, Hotbar, renderTileIcon } from "./hotbar";
 
 export class Inventory {
@@ -10,6 +10,7 @@ export class Inventory {
   private targetHotbarIndex = 0;
   private _isOpen = false;
   public onToggle?: (isOpen: boolean) => void;
+  public onOpenMath?: () => void;
 
   constructor(app: HTMLElement, hotbar: Hotbar, atlasCanvas: HTMLCanvasElement) {
     this.app = app;
@@ -90,6 +91,24 @@ export class Inventory {
     this.hotbarSlotsContainer = hotbarGrid;
     win.appendChild(hotbarGrid);
 
+    // Get more blocks button
+    const getMoreWrap = document.createElement("div");
+    getMoreWrap.style.textAlign = "center";
+    getMoreWrap.style.margin = "6px 0";
+
+    const getMoreBtn = document.createElement("button");
+    getMoreBtn.type = "button";
+    getMoreBtn.className = "math-action-btn ok-btn";
+    getMoreBtn.style.padding = "6px 16px";
+    getMoreBtn.style.fontSize = "13px";
+    getMoreBtn.textContent = "✏️ つうぶん問題を解いてブロックゲット！";
+    getMoreBtn.addEventListener("click", () => {
+      this.close();
+      this.onOpenMath?.();
+    });
+    getMoreWrap.appendChild(getMoreBtn);
+    win.appendChild(getMoreWrap);
+
     // Footer hints
     const footer = document.createElement("div");
     footer.className = "inventory-footer";
@@ -121,6 +140,16 @@ export class Inventory {
       slot.appendChild(keyLabel);
 
       const icon = renderTileIcon(this.atlasCanvas, blockId, 36);
+      const data = this.hotbar.getSlotData(i);
+      const count = data ? data.count : 0;
+      if (count > 0) {
+        const countLabel = document.createElement("span");
+        countLabel.className = "inv-count-label";
+        countLabel.textContent = count.toString();
+        slot.appendChild(countLabel);
+      } else {
+        icon.style.opacity = "0.3";
+      }
       slot.appendChild(icon);
 
       slot.addEventListener("click", () => {
