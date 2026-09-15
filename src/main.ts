@@ -301,7 +301,7 @@ function boot(): void {
       toast = document.createElement("div");
       toast.id = "game-toast";
       toast.className = "game-toast";
-      app.appendChild(toast);
+      document.body.appendChild(toast);
     }
     toast.textContent = msg;
     toast.classList.add("show");
