@@ -135,6 +135,8 @@ export class BlockInteraction {
     this.remesh(hit.blockX, hit.blockZ);
   }
 
+  public onNoBlocksAvailable?: () => void;
+
   /** Place the hotbar's block against the targeted face. Public for the
    * touch controls (long-press / place button). */
   placeTargetedBlock(): void {
@@ -143,9 +145,15 @@ export class BlockInteraction {
     if (this.world.getBlock(hit.placeX, hit.placeY, hit.placeZ) !== BlockId.AIR) return;
     if (this.overlapsPlayer(hit.placeX, hit.placeY, hit.placeZ)) return;
 
-    if (!this.hotbar.hasSelectedBlock()) return;
+    if (!this.hotbar.hasSelectedBlock()) {
+      this.onNoBlocksAvailable?.();
+      return;
+    }
     const blockToPlace = this.hotbar.selectedBlock;
-    if (!this.hotbar.consumeSelectedBlock()) return;
+    if (!this.hotbar.consumeSelectedBlock()) {
+      this.onNoBlocksAvailable?.();
+      return;
+    }
 
     this.world.setBlock(hit.placeX, hit.placeY, hit.placeZ, blockToPlace);
     this.onEdit?.(hit.placeX, hit.placeY, hit.placeZ, blockToPlace);

@@ -110,6 +110,23 @@ canvas {
   text-shadow: 0 0 2px #000;
 }
 
+.hotbar-count {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 13px;
+  font-weight: 900;
+  color: #ffeaa7;
+  text-shadow:
+    1px 1px 0 #000,
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    0 1px 0 #000;
+  pointer-events: none;
+  letter-spacing: -0.5px;
+}
+
 #overlay {
   position: fixed;
   inset: 0;
@@ -584,17 +601,75 @@ canvas {
   color: #404040;
 }
 
-.inventory-palette-grid {
+.inventory-acquired-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
   background: #8b8b8b;
   border: 2px solid #373737;
   border-right-color: #fff;
   border-bottom-color: #fff;
   padding: 8px;
-  max-height: 240px;
+  max-height: 220px;
+  min-height: 80px;
   overflow-y: auto;
+}
+
+.acquired-block-card {
+  background: #c6c6c6;
+  border: 2px solid #fff;
+  border-right-color: #555;
+  border-bottom-color: #555;
+  border-radius: 4px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s;
+}
+
+.acquired-block-card:hover {
+  background: #dcdcdc;
+  border-color: #ffeaa7 #555 #555 #ffeaa7;
+}
+
+.acquired-block-card:active {
+  border-color: #555 #fff #fff #555;
+  background: #b0b0b0;
+}
+
+.acquired-block-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.acquired-block-name {
+  font-size: 12px;
+  font-weight: bold;
+  color: #2c3e50;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 75px;
+}
+
+.acquired-block-count {
+  font-size: 14px;
+  font-weight: 900;
+  color: #d35400;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.empty-inventory-notice {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 24px 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
 }
 
 .inventory-hotbar-grid {
@@ -646,6 +721,21 @@ canvas {
   pointer-events: none;
 }
 
+.inv-count-label {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 12px;
+  font-weight: 900;
+  color: #ffeaa7;
+  text-shadow:
+    1px 1px 0 #000,
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000;
+  pointer-events: none;
+}
+
 /* Tooltip on hover */
 .inv-slot[data-tooltip]:hover::after {
   content: attr(data-tooltip);
@@ -662,6 +752,32 @@ canvas {
   pointer-events: none;
   z-index: 100;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.game-toast {
+  position: fixed;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: rgba(192, 57, 43, 0.95);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  border: 2px solid #e74c3c;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.game-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 .inventory-footer {

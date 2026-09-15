@@ -1,5 +1,5 @@
-import { BlockId, BLOCKS, INVENTORY_BLOCKS } from "../world/blocks";
-import { HOTBAR_SIZE, Hotbar, renderTileIcon } from "./hotbar";
+import { BlockId, BLOCKS } from "../world/blocks";
+import { Hotbar, renderTileIcon } from "./hotbar";
 
 export class Inventory {
   private readonly app: HTMLElement;
@@ -54,31 +54,16 @@ export class Inventory {
     header.appendChild(closeBtn);
     win.appendChild(header);
 
-    // Section 1: Palette
+    // Section 1: Acquired Blocks (獲得したブロックのみ表示)
     const paletteTitle = document.createElement("div");
     paletteTitle.className = "inventory-section-title";
-    paletteTitle.textContent = "ブロック一覧（クリックで手持ちにセット）";
+    paletteTitle.textContent = "🎒 獲得したブロック（問題を解いてゲットしたもちもの）";
     win.appendChild(paletteTitle);
 
-    const paletteGrid = document.createElement("div");
-    paletteGrid.className = "inventory-palette-grid";
-
-    INVENTORY_BLOCKS.forEach((blockId) => {
-      const def = BLOCKS[blockId];
-      const slot = document.createElement("div");
-      slot.className = "inv-slot";
-      slot.setAttribute("data-tooltip", `${def.label} (${def.name})`);
-
-      const icon = renderTileIcon(this.atlasCanvas, blockId, 36);
-      slot.appendChild(icon);
-
-      slot.addEventListener("click", () => {
-        this.setBlockToHotbar(blockId);
-      });
-
-      paletteGrid.appendChild(slot);
-    });
-    win.appendChild(paletteGrid);
+    const acquiredGrid = document.createElement("div");
+    acquiredGrid.className = "inventory-acquired-grid";
+    this.acquiredContainer = acquiredGrid;
+    win.appendChild(acquiredGrid);
 
     // Section 2: Hotbar (Quickbar)
     const hotbarTitle = document.createElement("div");
@@ -94,13 +79,13 @@ export class Inventory {
     // Get more blocks button
     const getMoreWrap = document.createElement("div");
     getMoreWrap.style.textAlign = "center";
-    getMoreWrap.style.margin = "6px 0";
+    getMoreWrap.style.margin = "12px 0 6px 0";
 
     const getMoreBtn = document.createElement("button");
     getMoreBtn.type = "button";
     getMoreBtn.className = "math-action-btn ok-btn";
-    getMoreBtn.style.padding = "6px 16px";
-    getMoreBtn.style.fontSize = "13px";
+    getMoreBtn.style.padding = "8px 20px";
+    getMoreBtn.style.fontSize = "14px";
     getMoreBtn.textContent = "✏️ つうぶん問題を解いてブロックゲット！";
     getMoreBtn.addEventListener("click", () => {
       this.close();
@@ -120,37 +105,105 @@ export class Inventory {
     this.modal = modal;
   }
 
+  private acquiredContainer: HTMLElement | null = null;
+
+  private refreshAcquiredBlocks(): void {
+    if (!this.acquiredContainer) return;
+    this.acquiredContainer.innerHTML = "";
+
+    // ホットバーのスロットから獲得したブロックを集計
+    const allSlots = this.hotbar.getAllSlotsData();
+    const acquiredMap = new Map<BlockId, number>();
+
+    allSlots.forEach((slot) => {
+      if (slot.blockId !== null && slot.count > 0) {
+        const prev = acquiredMap.get(slot.blockId) ?? 0;
+        acquiredMap.set(slot.blockId, prev + slot.count);
+      }
+    });
+
+    if (acquiredMap.size === 0) {
+      // ブロックをまだ持っていないときの案内
+      const emptyNotice = document.createElement("div");
+      emptyNotice.className = "empty-inventory-notice";
+      emptyNotice.innerHTML = `
+        <div style="font-size: 32px; margin-bottom: 4px;">📦</div>
+        <div style="font-weight: 900; font-size: 15px; color: #2c3e50;">まだブロックを持っていません</div>
+        <div style="font-size: 12px; color: #555; margin-top: 4px;">
+          下の「✏️ つうぶん問題を解いてブロックゲット！」を押して、<br />
+          問題を1問解くごとにランダムなブロックが <b>3個</b> 手に入ります！
+        </div>
+      `;
+      this.acquiredContainer.appendChild(emptyNotice);
+      return;
+    }
+
+    // 獲得したブロックのみを表示
+    acquiredMap.forEach((count, blockId) => {
+      const def = BLOCKS[blockId];
+      const card = document.createElement("div");
+      card.className = "acquired-block-card";
+
+      const icon = renderTileIcon(this.atlasCanvas, blockId, 40);
+      card.appendChild(icon);
+
+      const info = document.createElement("div");
+      info.className = "acquired-block-info";
+
+      const name = document.createElement("div");
+      name.className = "acquired-block-name";
+      name.textContent = def.label;
+      info.appendChild(name);
+
+      const countBadge = document.createElement("div");
+      countBadge.className = "acquired-block-count";
+      countBadge.textContent = `×${count.toString()}こ`;
+      info.appendChild(countBadge);
+
+      card.appendChild(info);
+
+      card.addEventListener("click", () => {
+        this.setBlockToHotbar(blockId, count);
+      });
+
+      this.acquiredContainer?.appendChild(card);
+    });
+  }
+
   private refreshHotbarSlots(): void {
     if (!this.hotbarSlotsContainer) return;
     this.hotbarSlotsContainer.innerHTML = "";
-    const slots = this.hotbar.getSlots();
+    const allSlots = this.hotbar.getAllSlotsData();
 
-    slots.forEach((blockId, i) => {
-      const def = BLOCKS[blockId];
+    allSlots.forEach((slotData, i) => {
       const slot = document.createElement("div");
       slot.className = "inv-slot hotbar-inv-slot";
       if (i === this.targetHotbarIndex) {
         slot.classList.add("target-selected");
       }
-      slot.setAttribute("data-tooltip", `[${(i + 1).toString()}] ${def.label}`);
 
       const keyLabel = document.createElement("span");
       keyLabel.className = "inv-key-label";
       keyLabel.textContent = (i + 1).toString();
       slot.appendChild(keyLabel);
 
-      const icon = renderTileIcon(this.atlasCanvas, blockId, 36);
-      const data = this.hotbar.getSlotData(i);
-      const count = data ? data.count : 0;
-      if (count > 0) {
+      if (slotData.blockId !== null && slotData.count > 0) {
+        const def = BLOCKS[slotData.blockId];
+        slot.setAttribute(
+          "data-tooltip",
+          `[${(i + 1).toString()}] ${def.label} (×${slotData.count.toString()})`,
+        );
+
+        const icon = renderTileIcon(this.atlasCanvas, slotData.blockId, 36);
+        slot.appendChild(icon);
+
         const countLabel = document.createElement("span");
         countLabel.className = "inv-count-label";
-        countLabel.textContent = count.toString();
+        countLabel.textContent = `×${slotData.count.toString()}`;
         slot.appendChild(countLabel);
       } else {
-        icon.style.opacity = "0.3";
+        slot.setAttribute("data-tooltip", `[${(i + 1).toString()}] からっぽ`);
       }
-      slot.appendChild(icon);
 
       slot.addEventListener("click", () => {
         this.targetHotbarIndex = i;
@@ -162,13 +215,10 @@ export class Inventory {
     });
   }
 
-  private setBlockToHotbar(blockId: BlockId): void {
-    this.hotbar.setSlot(this.targetHotbarIndex, blockId);
+  private setBlockToHotbar(blockId: BlockId, count: number): void {
+    this.hotbar.setSlot(this.targetHotbarIndex, blockId, count);
     this.refreshHotbarSlots();
-
-    // Advance to next slot automatically for easy continuous picking
-    this.targetHotbarIndex = (this.targetHotbarIndex + 1) % HOTBAR_SIZE;
-    this.refreshHotbarSlots();
+    this.refreshAcquiredBlocks();
   }
 
   private bindEvents(): void {
@@ -195,6 +245,7 @@ export class Inventory {
     this._isOpen = true;
     this.targetHotbarIndex = this.hotbar.selectedSlotIndex;
     this.refreshHotbarSlots();
+    this.refreshAcquiredBlocks();
     this.modal?.classList.remove("hidden");
     this.onToggle?.(true);
   }

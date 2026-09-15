@@ -35,11 +35,11 @@ export function renderTileIcon(
 export const HOTBAR_SIZE = 9;
 
 export interface HotbarSlotData {
-  blockId: BlockId;
+  blockId: BlockId | null;
   count: number;
 }
 
-const STORAGE_KEY = "maikura_hotbar_v1";
+const STORAGE_KEY = "maikura_hotbar_v2";
 
 /** The 9-slot block picker with item counts: click, number keys 1-9, or scroll to select. */
 export class Hotbar {
@@ -82,18 +82,11 @@ export class Hotbar {
     } catch {
       // ignore
     }
-    // Default starting blocks (3 of each for testing)
-    const defaults: HotbarSlotData[] = [
-      { blockId: BlockId.GRASS, count: 3 },
-      { blockId: BlockId.PLANKS, count: 3 },
-      { blockId: BlockId.COBBLESTONE, count: 3 },
-      { blockId: BlockId.BRICK, count: 3 },
-      { blockId: BlockId.GLASS, count: 3 },
-      { blockId: BlockId.WOOD, count: 3 },
-      { blockId: BlockId.DIRT, count: 3 },
-      { blockId: BlockId.GOLD_BLOCK, count: 0 },
-      { blockId: BlockId.DIAMOND_BLOCK, count: 0 },
-    ];
+    // 初期状態は0個（問題を解いて初めてブロックを獲得できる仕様）
+    const defaults: HotbarSlotData[] = Array.from({ length: HOTBAR_SIZE }, () => ({
+      blockId: null,
+      count: 0,
+    }));
     return defaults;
   }
 
@@ -118,15 +111,16 @@ export class Hotbar {
       key.textContent = (i + 1).toString();
       slot.appendChild(key);
 
-      const icon = renderTileIcon(this.atlasCanvas, slotData.blockId);
-      if (slotData.count <= 0) {
-        icon.style.opacity = "0.25";
+      // 獲得したブロックのみアイコンを表示（count > 0 かつ blockId !== null）
+      if (slotData.blockId !== null && slotData.count > 0) {
+        const icon = renderTileIcon(this.atlasCanvas, slotData.blockId);
+        slot.appendChild(icon);
       }
-      slot.appendChild(icon);
 
       const countBadge = document.createElement("span");
       countBadge.className = "hotbar-count";
-      countBadge.textContent = slotData.count > 0 ? slotData.count.toString() : "";
+      countBadge.textContent =
+        slotData.blockId !== null && slotData.count > 0 ? `×${slotData.count.toString()}` : "";
       slot.appendChild(countBadge);
 
       slot.addEventListener("click", () => {
@@ -155,14 +149,15 @@ export class Hotbar {
     const data = this.slots[index];
     if (!slotEl || !data) return;
 
-    // Update canvas icon
+    // Remove old canvas icon
     const oldCanvas = slotEl.querySelector("canvas");
     if (oldCanvas) slotEl.removeChild(oldCanvas);
-    const newIcon = renderTileIcon(this.atlasCanvas, data.blockId);
-    if (data.count <= 0) {
-      newIcon.style.opacity = "0.25";
+
+    // 獲得したブロックのみアイコンを表示
+    if (data.blockId !== null && data.count > 0) {
+      const newIcon = renderTileIcon(this.atlasCanvas, data.blockId);
+      slotEl.appendChild(newIcon);
     }
-    slotEl.appendChild(newIcon);
 
     // Update count badge
     let countBadge = slotEl.querySelector<HTMLElement>(".hotbar-count");
@@ -171,7 +166,8 @@ export class Hotbar {
       countBadge.className = "hotbar-count";
       slotEl.appendChild(countBadge);
     }
-    countBadge.textContent = data.count > 0 ? data.count.toString() : "";
+    countBadge.textContent =
+      data.blockId !== null && data.count > 0 ? `×${data.count.toString()}` : "";
   }
 
   /** Add random blocks (default 3) to inventory / hotbar. Returns info of acquired block. */
@@ -183,7 +179,7 @@ export class Hotbar {
     const chosenBlockId = candidateBlocks[randomIndex] ?? BlockId.GRASS;
 
     // Check if block already in hotbar
-    const existingIndex = this.slots.findIndex((s) => s.blockId === chosenBlockId);
+    const existingIndex = this.slots.findIndex((s) => s.blockId === chosenBlockId && s.count > 0);
     if (existingIndex >= 0) {
       const slot = this.slots[existingIndex];
       if (slot) {
@@ -198,8 +194,8 @@ export class Hotbar {
       }
     }
 
-    // Look for an empty/0-count slot
-    const emptyIndex = this.slots.findIndex((s) => s.count <= 0);
+    // Look for an empty slot (count <= 0 or blockId === null)
+    const emptyIndex = this.slots.findIndex((s) => s.count <= 0 || s.blockId === null);
     const targetIdx = emptyIndex >= 0 ? emptyIndex : this.selectedIndex;
     this.slots[targetIdx] = { blockId: chosenBlockId, count: amount };
     this.refreshSlotElement(targetIdx);
@@ -215,10 +211,14 @@ export class Hotbar {
   /** Consumes 1 block from the currently selected slot. Returns false if no blocks left. */
   public consumeSelectedBlock(): boolean {
     const current = this.slots[this.selectedIndex];
-    if (!current || current.count <= 0) {
+    if (!current || current.blockId === null || current.count <= 0) {
       return false;
     }
     current.count -= 1;
+    if (current.count <= 0) {
+      current.count = 0;
+      current.blockId = null; // 0個になったらスロットから消去
+    }
     this.refreshSlotElement(this.selectedIndex);
     this.saveSlots();
     return true;
@@ -226,20 +226,22 @@ export class Hotbar {
 
   public hasSelectedBlock(): boolean {
     const current = this.slots[this.selectedIndex];
-    return current !== undefined && current.count > 0;
+    return current !== undefined && current.blockId !== null && current.count > 0;
   }
 
-  public setSlot(index: number, blockId: BlockId): void {
+  public setSlot(index: number, blockId: BlockId | null, count = 0): void {
     if (index < 0 || index >= HOTBAR_SIZE) return;
-    const existing = this.slots[index];
-    const prevCount = existing ? existing.count : 0;
-    this.slots[index] = { blockId, count: prevCount };
+    this.slots[index] = { blockId, count };
     this.refreshSlotElement(index);
     this.saveSlots();
   }
 
-  public getSlots(): readonly BlockId[] {
+  public getSlots(): readonly (BlockId | null)[] {
     return this.slots.map((s) => s.blockId);
+  }
+
+  public getAllSlotsData(): readonly HotbarSlotData[] {
+    return this.slots;
   }
 
   public getSlotData(index: number): HotbarSlotData | undefined {
@@ -264,6 +266,6 @@ export class Hotbar {
 
   get selectedBlock(): BlockId {
     const s = this.slots[this.selectedIndex];
-    return s ? s.blockId : BlockId.GRASS;
+    return s && s.blockId !== null && s.count > 0 ? s.blockId : BlockId.AIR;
   }
 }

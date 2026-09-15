@@ -294,6 +294,27 @@ function boot(): void {
     hotbar,
     player,
   );
+  let toastTimer: ReturnType<typeof setTimeout> | undefined;
+  function showToast(msg: string): void {
+    let toast = document.querySelector<HTMLDivElement>("#game-toast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "game-toast";
+      toast.className = "game-toast";
+      app.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.classList.add("show");
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast?.classList.remove("show");
+    }, 2500);
+  }
+
+  interaction.onNoBlocksAvailable = () => {
+    showToast("ブロックを持っていないよ！ ✏️もんだいを解いてゲットしよう！");
+  };
+
   interaction.onEdit = (x, y, z, id) => {
     editStore.record(x, y, z, id);
   };
