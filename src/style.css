@@ -631,6 +631,13 @@ canvas {
   color: #e74c3c;
 }
 
+.m-and {
+  font-size: 18px;
+  font-weight: bold;
+  color: #34495e;
+  margin: 0 4px;
+}
+
 .math-instruction {
   font-size: 13px;
   font-weight: bold;
