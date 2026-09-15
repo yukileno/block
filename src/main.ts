@@ -13,6 +13,7 @@ import { Hotbar } from "./ui/hotbar";
 import { Hud } from "./ui/hud";
 import { Inventory } from "./ui/inventory";
 import { MathModal } from "./ui/math-modal";
+import { BuildTimer } from "./game/build-timer";
 import { isTouchDevice, TouchControls } from "./ui/touch-controls";
 import { EditStore } from "./world/edit-store";
 import { findPleasantSpawn } from "./world/spawn";
@@ -180,10 +181,11 @@ function boot(): void {
   // Ground under the player's feet before the first frame; the rest streams in.
   streamer.warmUp(spawn.x, spawn.z, WARMUP_RADIUS_CHUNKS);
 
+  const buildTimer = new BuildTimer();
   const player = new PlayerController(view.camera, view.domElement, world, spawn.x, spawn.z);
   const hotbar = new Hotbar(hotbarContainer, atlas.canvas);
   const inventory = new Inventory(app, hotbar, atlas.canvas);
-  const mathModal = new MathModal(app, hotbar, atlas.canvas);
+  const mathModal = new MathModal(app, hotbar, atlas.canvas, buildTimer);
 
   inventory.onToggle = (isOpen) => {
     player.setInventoryOpen(isOpen || mathModal.isOpen);
@@ -196,7 +198,7 @@ function boot(): void {
       mathBtn.classList.toggle("active", isOpen);
       buildBtn.classList.toggle("active", !isOpen);
     }
-    if (!isOpen && !player.isActive) {
+    if (!isOpen && !player.isActive && buildTimer.hasTime()) {
       showControlsGuide();
     }
   };
@@ -226,6 +228,55 @@ function boot(): void {
     overlay?.classList.remove("hidden");
   }
 
+  function showTimeUpModal(): void {
+    let modal = document.querySelector<HTMLDivElement>("#timeup-modal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "timeup-modal";
+      modal.className = "timeup-modal";
+      modal.innerHTML = `
+        <div class="timeup-card">
+          <div class="timeup-icon">⏰</div>
+          <div class="timeup-title">けんちく時間切れ！</div>
+          <div class="timeup-desc">
+            たくさん建築したね！<br />
+            つぎの建築タイムをゲットするために、<br />
+            <b>つうぶん問題を解こう！</b>
+          </div>
+          <div class="timeup-hint">
+            💡 1問正解ごとに <b>+20びょう</b> チャージ！（最大5分）
+          </div>
+          <div class="timeup-actions">
+            <button type="button" id="btn-timeup-math" class="math-action-btn ok-btn" style="padding: 12px 28px; font-size: 16px;">
+              ✏️ もんだいを解く！
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.querySelector("#btn-timeup-math")?.addEventListener("click", () => {
+        modal?.classList.remove("show");
+        mathModal.open();
+      });
+    }
+    modal.classList.add("show");
+  }
+
+  function handleTimeUp(): void {
+    player.exitControl();
+    showTimeUpModal();
+  }
+
+  function tryEnterBuild(): void {
+    if (!buildTimer.hasTime()) {
+      showToast("けんちく時間が 0秒 だよ！ ✏️まずは問題を解いて時間をチャージしよう！(+20秒)");
+      inventory.close();
+      mathModal.open();
+      return;
+    }
+    showControlsGuide();
+  }
+
   // 1. Initial Mode Selection buttons
   document.querySelector("#btn-start-math")?.addEventListener("click", () => {
     overlay?.classList.add("hidden");
@@ -234,8 +285,7 @@ function boot(): void {
   });
 
   document.querySelector("#btn-start-build")?.addEventListener("click", () => {
-    // 建築を選んだ時に最初に日本語で動かし方を出す
-    showControlsGuide();
+    tryEnterBuild();
   });
 
   // 2. Controls Guide buttons
@@ -244,12 +294,18 @@ function boot(): void {
   });
 
   document.querySelector("#btn-enter-world")?.addEventListener("click", () => {
+    if (!buildTimer.hasTime()) {
+      showToast("けんちく時間が 0秒 だよ！ ✏️まずは問題を解いて時間をチャージしよう！(+20秒)");
+      showModeSelect();
+      mathModal.open();
+      return;
+    }
     player.requestControl();
   });
 
   // When player exits pointer lock / goes idle, show controls guide (pause screen)
   player.onEnterIdle = () => {
-    if (!mathModal.isOpen && !inventory.isOpen) {
+    if (!mathModal.isOpen && !inventory.isOpen && buildTimer.hasTime()) {
       showControlsGuide();
     }
   };
@@ -261,9 +317,20 @@ function boot(): void {
   modeSwitcher.innerHTML = `
     <button type="button" id="btn-mode-math" class="mode-btn mode-btn-math">✏️ もんだい (ブロック獲得)</button>
     <button type="button" id="btn-mode-build" class="mode-btn mode-btn-build active">🔨 けんちく</button>
+    <div id="mode-timer-badge" class="mode-timer-badge" title="けんちく残り時間 (1問正解で+20秒、最大5分)">⏱️ 00:00</div>
     <button type="button" id="btn-mode-help" class="mode-btn mode-btn-help" title="動かし方を見る">❓ そうさ方法</button>
   `;
   app.appendChild(modeSwitcher);
+
+  function updateTimerBadge(): void {
+    const timerBadge = document.querySelector<HTMLDivElement>("#mode-timer-badge");
+    if (!timerBadge) return;
+    const timeStr = buildTimer.isMax ? "MAX 05:00" : buildTimer.formattedTime;
+    timerBadge.textContent = `⏱️ ${timeStr}`;
+    timerBadge.classList.toggle("warning", buildTimer.isWarning);
+    timerBadge.classList.toggle("max", buildTimer.isMax);
+    timerBadge.classList.toggle("empty", !buildTimer.hasTime());
+  }
 
   document.querySelector("#btn-mode-math")?.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -273,6 +340,11 @@ function boot(): void {
 
   document.querySelector("#btn-mode-build")?.addEventListener("click", (e) => {
     e.stopPropagation();
+    if (!buildTimer.hasTime()) {
+      showToast("けんちく時間が 0秒 だよ！ ✏️まずは問題を解いて時間をチャージしよう！(+20秒)");
+      mathModal.open();
+      return;
+    }
     mathModal.close();
     if (!player.isActive) {
       player.requestControl();
@@ -406,6 +478,15 @@ function boot(): void {
       seed: SEED,
       note: view.qualityNote(),
     });
+
+    // 建築モードプレイ中（アクティブかつモーダル非表示）に持ち時間を消費
+    if (player.isActive && !mathModal.isOpen && !inventory.isOpen) {
+      const isTimeUp = buildTimer.tick(dt);
+      if (isTimeUp) {
+        handleTimeUp();
+      }
+    }
+    updateTimerBadge();
 
     view.render(elapsed);
     requestAnimationFrame(frame);

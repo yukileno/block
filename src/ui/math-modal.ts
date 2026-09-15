@@ -1,11 +1,13 @@
 import { generateProblem, type FractionProblem } from "../math/fraction";
 import type { Hotbar } from "./hotbar";
 import { renderTileIcon } from "./hotbar";
+import type { BuildTimer } from "../game/build-timer";
 
 export class MathModal {
   private readonly app: HTMLElement;
   private readonly hotbar: Hotbar;
   private readonly atlasCanvas: HTMLCanvasElement;
+  private readonly buildTimer: BuildTimer;
 
   private modal: HTMLElement | null = null;
   private problemCard: HTMLElement | null = null;
@@ -22,10 +24,16 @@ export class MathModal {
   private _isOpen = false;
   public onToggle?: (isOpen: boolean) => void;
 
-  constructor(app: HTMLElement, hotbar: Hotbar, atlasCanvas: HTMLCanvasElement) {
+  constructor(
+    app: HTMLElement,
+    hotbar: Hotbar,
+    atlasCanvas: HTMLCanvasElement,
+    buildTimer: BuildTimer,
+  ) {
     this.app = app;
     this.hotbar = hotbar;
     this.atlasCanvas = atlasCanvas;
+    this.buildTimer = buildTimer;
 
     this.createDom();
   }
@@ -223,8 +231,15 @@ export class MathModal {
     // ユーザー指定: 「ブロックは１問正解で３個。種類はランダム。」
     const reward = this.hotbar.addRandomBlocks(3);
 
+    // ユーザー指定: 「１問正解で２０秒増加。上限プレイタイム５分。」
+    const timeReward = this.buildTimer.addReward();
+
     // 獲得ブロックのアイコンを作成
     const icon = renderTileIcon(this.atlasCanvas, reward.blockId, 48);
+
+    const timeLabel = timeReward.isMax
+      ? "MAX 05:00 (まんたん！)"
+      : `のこり ${this.buildTimer.formattedTime}`;
 
     this.answerArea.innerHTML = `
       <div class="math-reward-card">
@@ -238,9 +253,13 @@ export class MathModal {
             <b>${reward.label}</b> を <span class="badge-count">×3こ</span> ゲット！
           </div>
         </div>
+        <div class="math-reward-time-row">
+          ⏱️ けんちくタイム <b>+20びょう！</b>
+          <span class="math-reward-total-time">(${timeLabel})</span>
+        </div>
         <div class="math-reward-btns">
           <button type="button" id="btn-next-prob" class="math-action-btn next-btn">つぎのもんだい ➔</button>
-          <button type="button" id="btn-go-build" class="math-action-btn build-btn">🔨 けんちくへ！</button>
+          <button type="button" id="btn-go-build" class="math-action-btn build-btn">🔨 けんちくへ！ (${this.buildTimer.formattedTime})</button>
         </div>
       </div>
     `;
