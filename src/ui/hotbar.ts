@@ -211,7 +211,7 @@ export class Hotbar {
   /** Consumes 1 block from the currently selected slot. Returns false if no blocks left. */
   public consumeSelectedBlock(): boolean {
     const current = this.slots[this.selectedIndex];
-    if (!current || current.blockId === null || current.count <= 0) {
+    if (!current?.blockId || current.count <= 0) {
       return false;
     }
     current.count -= 1;
@@ -226,7 +226,7 @@ export class Hotbar {
 
   public hasSelectedBlock(): boolean {
     const current = this.slots[this.selectedIndex];
-    return current !== undefined && current.blockId !== null && current.count > 0;
+    return current?.blockId != null && current.count > 0;
   }
 
   public setSlot(index: number, blockId: BlockId | null, count = 0): void {

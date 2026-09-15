@@ -307,7 +307,7 @@ function boot(): void {
     toast.classList.add("show");
     if (toastTimer) clearTimeout(toastTimer);
     toastTimer = setTimeout(() => {
-      toast?.classList.remove("show");
+      toast.classList.remove("show");
     }, 2500);
   }
 
