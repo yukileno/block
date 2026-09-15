@@ -1,4 +1,4 @@
-import { BlockId, PLACEABLE_BLOCKS } from "../world/blocks";
+import { BlockId, BLOCKS, PLACEABLE_BLOCKS } from "../world/blocks";
 import { ATLAS_TILE_SIZE, tileForBlockFace, tileGridPosition } from "../render/atlas-layout";
 
 export const ICON_SIZE = 40;

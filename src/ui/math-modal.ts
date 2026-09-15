@@ -1,4 +1,4 @@
-﻿import { generateProblem, type FractionProblem } from "../math/fraction";
+import { generateProblem, type FractionProblem } from "../math/fraction";
 import type { Hotbar } from "./hotbar";
 import { renderTileIcon } from "./hotbar";
 
@@ -191,22 +191,21 @@ export class MathModal {
     });
   }
 
+  private getInputValue(selector: string): number {
+    const el = document.querySelector<HTMLInputElement>(selector);
+    if (!el) return 0;
+    const val = el.value.trim();
+    return val === "" ? 0 : Number(val);
+  }
+
   private checkStep1(): void {
     if (!this.currentProblem) return;
     const p = this.currentProblem;
 
-    const n1 = Number(
-      (document.querySelector("#in-step1-n1") as HTMLInputElement)?.value.trim() ?? "",
-    );
-    const den1 = Number(
-      (document.querySelector("#in-step1-den1") as HTMLInputElement)?.value.trim() ?? "",
-    );
-    const n2 = Number(
-      (document.querySelector("#in-step1-n2") as HTMLInputElement)?.value.trim() ?? "",
-    );
-    const den2 = Number(
-      (document.querySelector("#in-step1-den2") as HTMLInputElement)?.value.trim() ?? "",
-    );
+    const n1 = this.getInputValue("#in-step1-n1");
+    const den1 = this.getInputValue("#in-step1-den1");
+    const n2 = this.getInputValue("#in-step1-n2");
+    const den2 = this.getInputValue("#in-step1-den2");
     const msg = document.querySelector("#math-msg");
 
     if (!n1 || !den1 || !n2 || !den2) {
@@ -261,12 +260,8 @@ export class MathModal {
     if (!this.currentProblem) return;
     const p = this.currentProblem;
 
-    const ansN = Number(
-      (document.querySelector("#in-ans-n") as HTMLInputElement)?.value.trim() ?? "",
-    );
-    const ansDen = Number(
-      (document.querySelector("#in-ans-den") as HTMLInputElement)?.value.trim() ?? "",
-    );
+    const ansN = this.getInputValue("#in-ans-n");
+    const ansDen = this.getInputValue("#in-ans-den");
     const msg = document.querySelector("#math-msg");
 
     if (!ansN || !ansDen) {
