@@ -267,8 +267,8 @@ function boot(): void {
 
   document.querySelector("#btn-mode-math")?.addEventListener("click", (e) => {
     e.stopPropagation();
-    inventory.close();
     mathModal.open();
+    inventory.close();
   });
 
   document.querySelector("#btn-mode-build")?.addEventListener("click", (e) => {

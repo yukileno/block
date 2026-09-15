@@ -84,7 +84,8 @@ export class PlayerController {
     if (open) {
       this.pressed.clear();
       this.dragging = false;
-      if (document.pointerLockElement === this.domElement) {
+      if (this.lockWatchdog) clearTimeout(this.lockWatchdog);
+      if (document.pointerLockElement) {
         document.exitPointerLock();
       }
     } else {
@@ -114,6 +115,10 @@ export class PlayerController {
       const locked = document.pointerLockElement === this.domElement;
       if (locked) {
         if (this.lockWatchdog) clearTimeout(this.lockWatchdog);
+        if (this._isInventoryOpen) {
+          document.exitPointerLock();
+          return;
+        }
         this.enterMode("pointer");
       } else if (this.controlMode === "pointer" && !this._isInventoryOpen) {
         this.enterMode("idle");
@@ -143,8 +148,8 @@ export class PlayerController {
         this.enterMode("idle");
         return;
       }
+      if (this.controlMode === "idle") return;
       this.pressed.add(e.code);
-      // The page must not scroll or focus-hop while playing.
       if (this.controlMode !== "idle" && (e.code === "Space" || e.code.startsWith("Arrow"))) {
         e.preventDefault();
       }
@@ -164,7 +169,8 @@ export class PlayerController {
 
   /** Exits pointer lock and returns to idle mode. */
   public exitControl(): void {
-    if (document.pointerLockElement === this.domElement) {
+    if (this.lockWatchdog) clearTimeout(this.lockWatchdog);
+    if (document.pointerLockElement) {
       document.exitPointerLock();
     }
     this.enterMode("idle");
@@ -174,6 +180,7 @@ export class PlayerController {
    * back to drag-look so the game starts regardless. Touch-first devices
    * skip the pointer-lock dance entirely — there is no pointer to lock. */
   public requestControl(): void {
+    if (this._isInventoryOpen) return;
     if (window.matchMedia("(pointer: coarse)").matches) {
       this.enterMode("drag");
       return;

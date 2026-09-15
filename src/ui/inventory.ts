@@ -88,8 +88,8 @@ export class Inventory {
     getMoreBtn.style.fontSize = "14px";
     getMoreBtn.textContent = "✏️ つうぶん問題を解いてブロックゲット！";
     getMoreBtn.addEventListener("click", () => {
-      this.close();
       this.onOpenMath?.();
+      this.close();
     });
     getMoreWrap.appendChild(getMoreBtn);
     win.appendChild(getMoreWrap);
@@ -243,6 +243,9 @@ export class Inventory {
   public open(): void {
     if (this._isOpen) return;
     this._isOpen = true;
+    if (document.pointerLockElement) {
+      document.exitPointerLock();
+    }
     this.targetHotbarIndex = this.hotbar.selectedSlotIndex;
     this.refreshHotbarSlots();
     this.refreshAcquiredBlocks();

@@ -1,4 +1,4 @@
-﻿import { generateProblem, type FractionProblem } from "../math/fraction";
+import { generateProblem, type FractionProblem } from "../math/fraction";
 import type { Hotbar } from "./hotbar";
 import { renderTileIcon } from "./hotbar";
 
@@ -283,6 +283,9 @@ export class MathModal {
   public open(): void {
     if (this._isOpen) return;
     this._isOpen = true;
+    if (document.pointerLockElement) {
+      document.exitPointerLock();
+    }
     this.modal?.classList.remove("hidden");
     this.nextProblem();
     this.onToggle?.(true);
