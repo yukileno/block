@@ -150,7 +150,7 @@ export class PlayerController {
       }
       if (this.controlMode === "idle") return;
       this.pressed.add(e.code);
-      if (this.controlMode !== "idle" && (e.code === "Space" || e.code.startsWith("Arrow"))) {
+      if (e.code === "Space" || e.code.startsWith("Arrow")) {
         e.preventDefault();
       }
     });
