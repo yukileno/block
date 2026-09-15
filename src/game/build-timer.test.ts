@@ -1,30 +1,46 @@
-import { describe, expect, it, beforeEach } from "vitest";
-import { BuildTimer, MAX_BUILD_TIME_SECONDS, REWARD_TIME_SECONDS } from "./build-timer";
+import { describe, expect, it } from "vitest";
+import {
+  BuildTimer,
+  MAX_BUILD_TIME_SECONDS,
+  REWARD_TIME_SECONDS,
+  type KeyValueStorage,
+} from "./build-timer";
+
+function memoryStorage(): KeyValueStorage & { data: Map<string, string> } {
+  const data = new Map<string, string>();
+  return {
+    data,
+    getItem: (k) => data.get(k) ?? null,
+    setItem: (k, v) => {
+      data.set(k, v);
+    },
+  };
+}
 
 describe("BuildTimer", () => {
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
   it("initializes with 0 seconds", () => {
-    const timer = new BuildTimer();
+    const storage = memoryStorage();
+    const timer = new BuildTimer(storage);
     expect(timer.remainingSeconds).toBe(0);
     expect(timer.hasTime()).toBe(false);
     expect(timer.formattedTime).toBe("00:00");
   });
 
   it("adds 20 seconds on reward", () => {
-    const timer = new BuildTimer();
+    const storage = memoryStorage();
+    const timer = new BuildTimer(storage);
     const res = timer.addReward();
     expect(res.added).toBe(REWARD_TIME_SECONDS);
     expect(res.total).toBe(20);
     expect(timer.remainingSeconds).toBe(20);
     expect(timer.hasTime()).toBe(true);
     expect(timer.formattedTime).toBe("00:20");
+    expect(storage.getItem("maikura_build_timer_v1")).toBe("20");
   });
 
   it("caps at 5 minutes (300 seconds)", () => {
-    const timer = new BuildTimer();
+    const storage = memoryStorage();
+    const timer = new BuildTimer(storage);
     for (let i = 0; i < 20; i++) {
       timer.addReward(20);
     }
@@ -38,7 +54,8 @@ describe("BuildTimer", () => {
   });
 
   it("ticks down and triggers onTimeUp when depleted", () => {
-    const timer = new BuildTimer();
+    const storage = memoryStorage();
+    const timer = new BuildTimer(storage);
     timer.addReward(10);
     expect(timer.remainingSeconds).toBe(10);
 
@@ -60,7 +77,8 @@ describe("BuildTimer", () => {
   });
 
   it("detects warning threshold correctly", () => {
-    const timer = new BuildTimer();
+    const storage = memoryStorage();
+    const timer = new BuildTimer(storage);
     timer.addReward(30);
     expect(timer.isWarning).toBe(true);
     timer.addReward(20);

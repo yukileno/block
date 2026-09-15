@@ -4,6 +4,11 @@ export const WARNING_TIME_SECONDS = 30; // 残り30秒で警告表示
 
 const STORAGE_KEY = "maikura_build_timer_v1";
 
+export interface KeyValueStorage {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+}
+
 export interface RewardResult {
   readonly added: number;
   readonly total: number;
@@ -18,17 +23,21 @@ export interface RewardResult {
  * - 0秒になるとタイムアップ
  */
 export class BuildTimer {
+  private readonly storage: KeyValueStorage | null;
   private remaining: number;
   public onTimeUp?: () => void;
 
-  constructor() {
+  constructor(
+    storage: KeyValueStorage | null = typeof localStorage !== "undefined" ? localStorage : null,
+  ) {
+    this.storage = storage;
     this.remaining = this.load();
   }
 
   private load(): number {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw !== null) {
+      const raw = this.storage?.getItem(STORAGE_KEY);
+      if (raw !== null && raw !== undefined) {
         const parsed = Number(raw);
         if (Number.isFinite(parsed) && parsed >= 0) {
           return Math.min(parsed, MAX_BUILD_TIME_SECONDS);
@@ -43,7 +52,7 @@ export class BuildTimer {
 
   public save(): void {
     try {
-      localStorage.setItem(STORAGE_KEY, Math.floor(this.remaining).toString());
+      this.storage?.setItem(STORAGE_KEY, Math.floor(this.remaining).toString());
     } catch {
       // ignore
     }
