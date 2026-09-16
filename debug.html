@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#e67e22" />
+    <meta
+      name="description"
+      content="A Minecraft-inspired voxel world in the browser - Debug Infinite Build Mode."
+    />
+    <title>block [デバッグ 建築無限モード]</title>
+  </head>
+  <body>
+    <div id="app">
+      <div id="crosshair" aria-hidden="true"></div>
+      <div id="hotbar"></div>
+      <div id="overlay">
+        <!-- 1. 初期画面: デバッグモード案内 -->
+        <div id="screen-mode-select" class="overlay-screen">
+          <div
+            style="
+              background: #e67e22;
+              color: #fff;
+              font-weight: bold;
+              padding: 6px 16px;
+              border-radius: 20px;
+              font-size: 14px;
+              margin-bottom: 12px;
+              display: inline-block;
+            "
+          >
+            🛠️ デバッグ 建築無限モード
+          </div>
+          <h1 class="game-title">🧱 算数ブロックわーるど</h1>
+          <p class="game-subtitle">時間無制限＆ブロック使い放題でテスト建築ができます！</p>
+          <div class="mode-select-grid">
+            <button
+              type="button"
+              id="btn-start-build"
+              class="mode-card-btn mode-card-build"
+              style="
+                grid-column: 1 / -1;
+                background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+              "
+            >
+              <div class="mode-card-icon">🚀</div>
+              <div class="mode-card-body">
+                <div class="mode-card-title">すぐに建築をはじめる！</div>
+                <div class="mode-card-desc">時間制限なし・ブロック全種∞使い放題</div>
+              </div>
+            </button>
+            <button type="button" id="btn-start-math" class="mode-card-btn mode-card-math">
+              <div class="mode-card-icon">✏️</div>
+              <div class="mode-card-body">
+                <div class="mode-card-title">もんだい画面のテスト</div>
+                <div class="mode-card-desc">通分問題UIの確認</div>
+              </div>
+            </button>
+            <a
+              href="./index.html"
+              class="mode-card-btn"
+              style="background: #34495e; text-decoration: none"
+            >
+              <div class="mode-card-icon">🌐</div>
+              <div class="mode-card-body">
+                <div class="mode-card-title">通常モードへもどる</div>
+                <div class="mode-card-desc">子どもたち用（算数タイマー制）</div>
+              </div>
+            </a>
+          </div>
+          <p class="disclaimer-text">
+            Not an official Minecraft product.<br />
+            Not approved by or associated with Mojang or Microsoft.
+          </p>
+        </div>
+
+        <!-- 2. けんちく選択時の日本語操作ガイド画面 -->
+        <div id="screen-controls-guide" class="overlay-screen hidden">
+          <div class="guide-header">
+            <div style="color: #e67e22; font-weight: bold; margin-bottom: 4px">
+              🛠️ デバッグ 建築無限モード
+            </div>
+            <h2 class="guide-title">🔨 けんちくの動かし方</h2>
+            <p class="guide-subtitle">そうさ方法をたしかめて、ワールドへ入ろう！</p>
+          </div>
+
+          <div class="guide-content">
+            <!-- パソコン・Chromebook操作 -->
+            <div class="guide-section controls-desktop">
+              <div class="guide-section-title">💻 パソコン・Chromebookでのそうさ</div>
+              <div class="guide-grid">
+                <div class="guide-item">
+                  <span class="key-group"
+                    ><span class="key-badge">W</span><span class="key-badge">A</span
+                    ><span class="key-badge">S</span><span class="key-badge">D</span></span
+                  >
+                  <span class="guide-label">いどう（前・後・左・右）</span>
+                </div>
+                <div class="guide-item">
+                  <span class="key-badge mouse-badge">マウス / パッド</span>
+                  <span class="guide-label">まわりを見わたす</span>
+                </div>
+                <div class="guide-item">
+                  <span class="key-group"
+                    ><span class="key-badge">F</span
+                    ><span class="key-badge mouse-badge">右クリック</span></span
+                  >
+                  <span class="guide-label"><b>ブロックをおく</b>（ChromebookはFキー！）</span>
+                </div>
+                <div class="guide-item">
+                  <span class="key-group"
+                    ><span class="key-badge">Q</span
+                    ><span class="key-badge mouse-badge">左クリック</span></span
+                  >
+                  <span class="guide-label"><b>ブロックをこわす</b>（QキーでもOK）</span>
+                </div>
+                <div class="guide-item">
+                  <span class="key-badge">Space</span>
+                  <span class="guide-label">ジャンプ</span>
+                </div>
+                <div class="guide-item">
+                  <span class="key-badge">E</span>
+                  <span class="guide-label">もちもの（インベントリ）</span>
+                </div>
+              </div>
+              <div
+                style="
+                  margin-top: 10px;
+                  font-size: 13px;
+                  color: #f1c40f;
+                  text-align: center;
+                  font-weight: bold;
+                  background: rgba(0, 0, 0, 0.3);
+                  padding: 6px 12px;
+                  border-radius: 8px;
+                "
+              >
+                💡 画面右下の「🔨 こわす」「🧱 おく」ボタンを押してもそうさできるよ！
+              </div>
+            </div>
+
+            <!-- スマホ・タブレット・タッチ操作 -->
+            <div class="guide-section controls-touch">
+              <div class="guide-section-title">📱 タッチ・タブレットでのそうさ</div>
+              <div class="guide-grid">
+                <div class="guide-item">
+                  <span class="key-badge touch-badge">左スティック</span>
+                  <span class="guide-label">指をすべらせて いどう</span>
+                </div>
+                <div class="guide-item">
+                  <span class="key-badge touch-badge">画面右がわ</span>
+                  <span class="guide-label">指でなぞって 向きをかえる</span>
+                </div>
+                <div class="guide-item">
+                  <span class="key-badge touch-badge">画面右下のボタン</span>
+                  <span class="guide-label">🔨こわす / 🧱おく / ⤒ジャンプ</span>
+                </div>
+                <div class="guide-item">
+                  <span class="key-badge touch-badge">画面タップ</span>
+                  <span class="guide-label">ブロックをこわす</span>
+                </div>
+                <div class="guide-item">
+                  <span class="key-badge touch-badge">📦 ボタン</span>
+                  <span class="guide-label">もちもの（インベントリ）</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-actions">
+            <button type="button" id="btn-guide-back" class="guide-btn-back">◀ もどる</button>
+            <button type="button" id="btn-enter-world" class="guide-btn-start">
+              ワールドに入る！ 🚀
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

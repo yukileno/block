@@ -1,4 +1,4 @@
-import { BlockId, BLOCKS, PLACEABLE_BLOCKS } from "../world/blocks";
+import { BlockId, BLOCKS, INVENTORY_BLOCKS, PLACEABLE_BLOCKS } from "../world/blocks";
 import { ATLAS_TILE_SIZE, tileForBlockFace, tileGridPosition } from "../render/atlas-layout";
 
 export const ICON_SIZE = 40;
@@ -49,10 +49,12 @@ export class Hotbar {
   private readonly slots: HotbarSlotData[];
   private readonly slotElements: HTMLElement[] = [];
   public onOpenInventory?: () => void;
+  public readonly isInfinite: boolean;
 
-  constructor(container: HTMLElement, atlasCanvas: HTMLCanvasElement) {
+  constructor(container: HTMLElement, atlasCanvas: HTMLCanvasElement, isInfinite = false) {
     this.container = container;
     this.atlasCanvas = atlasCanvas;
+    this.isInfinite = isInfinite;
     this.slots = this.loadSlots();
 
     this.build();
@@ -71,6 +73,13 @@ export class Hotbar {
   }
 
   private loadSlots(): HotbarSlotData[] {
+    if (this.isInfinite) {
+      // 無限モードでは初期状態で定番ブロック（1〜9）をフル装備
+      return INVENTORY_BLOCKS.slice(0, HOTBAR_SIZE).map((blockId) => ({
+        blockId,
+        count: 999,
+      }));
+    }
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -91,6 +100,7 @@ export class Hotbar {
   }
 
   private saveSlots(): void {
+    if (this.isInfinite) return; // 無限モードの持ち物は通常セーブを上書きしない
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.slots));
     } catch {
@@ -111,16 +121,20 @@ export class Hotbar {
       key.textContent = (i + 1).toString();
       slot.appendChild(key);
 
-      // 獲得したブロックのみアイコンを表示（count > 0 かつ blockId !== null）
-      if (slotData.blockId !== null && slotData.count > 0) {
+      // 獲得したブロックのみアイコンを表示（無限モードは blockId !== null でOK）
+      if (slotData.blockId !== null && (this.isInfinite || slotData.count > 0)) {
         const icon = renderTileIcon(this.atlasCanvas, slotData.blockId);
         slot.appendChild(icon);
       }
 
       const countBadge = document.createElement("span");
       countBadge.className = "hotbar-count";
-      countBadge.textContent =
-        slotData.blockId !== null && slotData.count > 0 ? `×${slotData.count.toString()}` : "";
+      if (this.isInfinite) {
+        countBadge.textContent = slotData.blockId !== null ? "∞" : "";
+      } else {
+        countBadge.textContent =
+          slotData.blockId !== null && slotData.count > 0 ? `×${slotData.count.toString()}` : "";
+      }
       slot.appendChild(countBadge);
 
       slot.addEventListener("click", () => {
@@ -154,7 +168,7 @@ export class Hotbar {
     if (oldCanvas) slotEl.removeChild(oldCanvas);
 
     // 獲得したブロックのみアイコンを表示
-    if (data.blockId !== null && data.count > 0) {
+    if (data.blockId !== null && (this.isInfinite || data.count > 0)) {
       const newIcon = renderTileIcon(this.atlasCanvas, data.blockId);
       slotEl.appendChild(newIcon);
     }
@@ -166,8 +180,12 @@ export class Hotbar {
       countBadge.className = "hotbar-count";
       slotEl.appendChild(countBadge);
     }
-    countBadge.textContent =
-      data.blockId !== null && data.count > 0 ? `×${data.count.toString()}` : "";
+    if (this.isInfinite) {
+      countBadge.textContent = data.blockId !== null ? "∞" : "";
+    } else {
+      countBadge.textContent =
+        data.blockId !== null && data.count > 0 ? `×${data.count.toString()}` : "";
+    }
   }
 
   /** Add random blocks (default 3) to inventory / hotbar. Returns info of acquired block. */
@@ -211,7 +229,13 @@ export class Hotbar {
   /** Consumes 1 block from the currently selected slot. Returns false if no blocks left. */
   public consumeSelectedBlock(): boolean {
     const current = this.slots[this.selectedIndex];
-    if (!current?.blockId || current.count <= 0) {
+    if (!current?.blockId || current.blockId === BlockId.AIR) {
+      return false;
+    }
+    if (this.isInfinite) {
+      return true;
+    }
+    if (current.count <= 0) {
       return false;
     }
     current.count -= 1;
@@ -226,6 +250,9 @@ export class Hotbar {
 
   public hasSelectedBlock(): boolean {
     const current = this.slots[this.selectedIndex];
+    if (this.isInfinite) {
+      return current?.blockId != null && current.blockId !== BlockId.AIR;
+    }
     return current?.blockId != null && current.count > 0;
   }
 
@@ -266,6 +293,9 @@ export class Hotbar {
 
   get selectedBlock(): BlockId {
     const s = this.slots[this.selectedIndex];
+    if (this.isInfinite) {
+      return s?.blockId ?? BlockId.AIR;
+    }
     return s && s.blockId !== null && s.count > 0 ? s.blockId : BlockId.AIR;
   }
 }

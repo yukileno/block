@@ -1,10 +1,11 @@
-import { BlockId, BLOCKS } from "../world/blocks";
+import { BlockId, BLOCKS, INVENTORY_BLOCKS } from "../world/blocks";
 import { Hotbar, renderTileIcon } from "./hotbar";
 
 export class Inventory {
   private readonly app: HTMLElement;
   private readonly hotbar: Hotbar;
   private readonly atlasCanvas: HTMLCanvasElement;
+  public readonly isInfinite: boolean;
   private modal: HTMLElement | null = null;
   private hotbarSlotsContainer: HTMLElement | null = null;
   private targetHotbarIndex = 0;
@@ -12,10 +13,16 @@ export class Inventory {
   public onToggle?: (isOpen: boolean) => void;
   public onOpenMath?: () => void;
 
-  constructor(app: HTMLElement, hotbar: Hotbar, atlasCanvas: HTMLCanvasElement) {
+  constructor(
+    app: HTMLElement,
+    hotbar: Hotbar,
+    atlasCanvas: HTMLCanvasElement,
+    isInfinite = false,
+  ) {
     this.app = app;
     this.hotbar = hotbar;
     this.atlasCanvas = atlasCanvas;
+    this.isInfinite = isInfinite;
     this.targetHotbarIndex = hotbar.selectedSlotIndex;
 
     this.createDom();
@@ -40,7 +47,9 @@ export class Inventory {
 
     const title = document.createElement("span");
     title.className = "inventory-title";
-    title.textContent = "持ち物 / Inventory";
+    title.textContent = this.isInfinite
+      ? "持ち物 / Inventory [デバッグ無限モード]"
+      : "持ち物 / Inventory";
 
     const closeBtn = document.createElement("button");
     closeBtn.className = "inventory-close-btn";
@@ -54,10 +63,12 @@ export class Inventory {
     header.appendChild(closeBtn);
     win.appendChild(header);
 
-    // Section 1: Acquired Blocks (獲得したブロックのみ表示)
+    // Section 1: Acquired Blocks (無限モードでは全ブロックパレットを表示)
     const paletteTitle = document.createElement("div");
     paletteTitle.className = "inventory-section-title";
-    paletteTitle.textContent = "🎒 獲得したブロック（問題を解いてゲットしたもちもの）";
+    paletteTitle.textContent = this.isInfinite
+      ? "🎒 全ブロックパレット（クリックで選択中のクイックバーにセット）"
+      : "🎒 獲得したブロック（問題を解いてゲットしたもちもの）";
     win.appendChild(paletteTitle);
 
     const acquiredGrid = document.createElement("div");
@@ -76,22 +87,32 @@ export class Inventory {
     this.hotbarSlotsContainer = hotbarGrid;
     win.appendChild(hotbarGrid);
 
-    // Get more blocks button
+    // Get more blocks button or infinite mode notice
     const getMoreWrap = document.createElement("div");
     getMoreWrap.style.textAlign = "center";
     getMoreWrap.style.margin = "12px 0 6px 0";
 
-    const getMoreBtn = document.createElement("button");
-    getMoreBtn.type = "button";
-    getMoreBtn.className = "math-action-btn ok-btn";
-    getMoreBtn.style.padding = "8px 20px";
-    getMoreBtn.style.fontSize = "14px";
-    getMoreBtn.textContent = "✏️ つうぶん問題を解いてブロックゲット！";
-    getMoreBtn.addEventListener("click", () => {
-      this.onOpenMath?.();
-      this.close();
-    });
-    getMoreWrap.appendChild(getMoreBtn);
+    if (this.isInfinite) {
+      const infiniteNotice = document.createElement("div");
+      infiniteNotice.style.fontSize = "13px";
+      infiniteNotice.style.color = "#27ae60";
+      infiniteNotice.style.fontWeight = "bold";
+      infiniteNotice.textContent =
+        "✨ デバッグモード: 全ブロック使い放題（個数制限・タイマーなし）";
+      getMoreWrap.appendChild(infiniteNotice);
+    } else {
+      const getMoreBtn = document.createElement("button");
+      getMoreBtn.type = "button";
+      getMoreBtn.className = "math-action-btn ok-btn";
+      getMoreBtn.style.padding = "8px 20px";
+      getMoreBtn.style.fontSize = "14px";
+      getMoreBtn.textContent = "✏️ つうぶん問題を解いてブロックゲット！";
+      getMoreBtn.addEventListener("click", () => {
+        this.onOpenMath?.();
+        this.close();
+      });
+      getMoreWrap.appendChild(getMoreBtn);
+    }
     win.appendChild(getMoreWrap);
 
     // Footer hints
@@ -110,6 +131,40 @@ export class Inventory {
   private refreshAcquiredBlocks(): void {
     if (!this.acquiredContainer) return;
     this.acquiredContainer.innerHTML = "";
+
+    // 無限モードの場合は全種類のブロックを無制限で表示
+    if (this.isInfinite) {
+      INVENTORY_BLOCKS.forEach((blockId) => {
+        const def = BLOCKS[blockId];
+        const card = document.createElement("div");
+        card.className = "acquired-block-card";
+
+        const icon = renderTileIcon(this.atlasCanvas, blockId, 40);
+        card.appendChild(icon);
+
+        const info = document.createElement("div");
+        info.className = "acquired-block-info";
+
+        const name = document.createElement("div");
+        name.className = "acquired-block-name";
+        name.textContent = def.label;
+        info.appendChild(name);
+
+        const countBadge = document.createElement("div");
+        countBadge.className = "acquired-block-count";
+        countBadge.textContent = "∞";
+        info.appendChild(countBadge);
+
+        card.appendChild(info);
+
+        card.addEventListener("click", () => {
+          this.setBlockToHotbar(blockId, 999);
+        });
+
+        this.acquiredContainer?.appendChild(card);
+      });
+      return;
+    }
 
     // ホットバーのスロットから獲得したブロックを集計
     const allSlots = this.hotbar.getAllSlotsData();
@@ -187,19 +242,17 @@ export class Inventory {
       keyLabel.textContent = (i + 1).toString();
       slot.appendChild(keyLabel);
 
-      if (slotData.blockId !== null && slotData.count > 0) {
+      if (slotData.blockId !== null && (this.isInfinite || slotData.count > 0)) {
         const def = BLOCKS[slotData.blockId];
-        slot.setAttribute(
-          "data-tooltip",
-          `[${(i + 1).toString()}] ${def.label} (×${slotData.count.toString()})`,
-        );
+        const countText = this.isInfinite ? "∞" : `×${slotData.count.toString()}`;
+        slot.setAttribute("data-tooltip", `[${(i + 1).toString()}] ${def.label} (${countText})`);
 
         const icon = renderTileIcon(this.atlasCanvas, slotData.blockId, 36);
         slot.appendChild(icon);
 
         const countLabel = document.createElement("span");
         countLabel.className = "inv-count-label";
-        countLabel.textContent = `×${slotData.count.toString()}`;
+        countLabel.textContent = countText;
         slot.appendChild(countLabel);
       } else {
         slot.setAttribute("data-tooltip", `[${(i + 1).toString()}] からっぽ`);

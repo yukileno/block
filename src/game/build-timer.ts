@@ -26,12 +26,15 @@ export class BuildTimer {
   private readonly storage: KeyValueStorage | null;
   private remaining: number;
   public onTimeUp?: () => void;
+  public readonly isInfinite: boolean;
 
   constructor(
     storage: KeyValueStorage | null = typeof localStorage !== "undefined" ? localStorage : null,
+    isInfinite = false,
   ) {
     this.storage = storage;
-    this.remaining = this.load();
+    this.isInfinite = isInfinite;
+    this.remaining = isInfinite ? Infinity : this.load();
   }
 
   private load(): number {
@@ -51,6 +54,7 @@ export class BuildTimer {
   }
 
   public save(): void {
+    if (this.isInfinite) return;
     try {
       this.storage?.setItem(STORAGE_KEY, Math.floor(this.remaining).toString());
     } catch {
@@ -62,6 +66,9 @@ export class BuildTimer {
    * 1問正解時のご褒美時間を加算（+20秒、上限300秒）
    */
   public addReward(seconds = REWARD_TIME_SECONDS): RewardResult {
+    if (this.isInfinite) {
+      return { added: 0, total: 9999, isMax: true };
+    }
     const prev = this.remaining;
     this.remaining = Math.min(this.remaining + seconds, MAX_BUILD_TIME_SECONDS);
     const added = this.remaining - prev;
@@ -78,7 +85,7 @@ export class BuildTimer {
    * @returns true: 時間切れ (タイムアップ) が発生した
    */
   public tick(dtSeconds: number): boolean {
-    if (this.remaining <= 0) {
+    if (this.isInfinite || this.remaining <= 0) {
       return false;
     }
 
@@ -95,25 +102,26 @@ export class BuildTimer {
   }
 
   public get remainingSeconds(): number {
-    return Math.max(0, Math.floor(this.remaining));
+    return this.isInfinite ? 9999 : Math.max(0, Math.floor(this.remaining));
   }
 
   public hasTime(): boolean {
-    return this.remaining > 0;
+    return this.isInfinite || this.remaining > 0;
   }
 
   public get isMax(): boolean {
-    return this.remaining >= MAX_BUILD_TIME_SECONDS;
+    return this.isInfinite || this.remaining >= MAX_BUILD_TIME_SECONDS;
   }
 
   public get isWarning(): boolean {
-    return this.remaining > 0 && this.remaining <= WARNING_TIME_SECONDS;
+    return !this.isInfinite && this.remaining > 0 && this.remaining <= WARNING_TIME_SECONDS;
   }
 
   /**
    * 表示用文字列 "MM:SS" (例: "03:45", "00:20")
    */
   public get formattedTime(): string {
+    if (this.isInfinite) return "∞ 無制限";
     const sec = this.remainingSeconds;
     const m = Math.floor(sec / 60);
     const s = sec % 60;

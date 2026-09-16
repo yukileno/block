@@ -88,7 +88,18 @@ interface GameView {
   qualityNote(): string;
 }
 
+function isInfiniteMode(): boolean {
+  const params = new URLSearchParams(window.location.search);
+  return (
+    window.location.pathname.endsWith("debug.html") ||
+    window.location.pathname.includes("debug") ||
+    params.has("debug") ||
+    params.get("mode") === "infinite"
+  );
+}
+
 function boot(): void {
+  const infiniteMode = isInfiniteMode();
   const app = document.querySelector<HTMLDivElement>("#app");
   if (!app) throw new Error("#app not found");
   const hotbarContainer = document.querySelector<HTMLDivElement>("#hotbar");
@@ -186,7 +197,7 @@ function boot(): void {
   // Ground under the player's feet before the first frame; the rest streams in.
   streamer.warmUp(startX, startZ, WARMUP_RADIUS_CHUNKS);
 
-  const buildTimer = new BuildTimer();
+  const buildTimer = new BuildTimer(infiniteMode);
   const player = new PlayerController(
     view.camera,
     view.domElement,
@@ -212,8 +223,8 @@ function boot(): void {
     savePlayerPosition();
   };
 
-  const hotbar = new Hotbar(hotbarContainer, atlas.canvas);
-  const inventory = new Inventory(app, hotbar, atlas.canvas);
+  const hotbar = new Hotbar(hotbarContainer, atlas.canvas, infiniteMode);
+  const inventory = new Inventory(app, hotbar, atlas.canvas, infiniteMode);
   const mathModal = new MathModal(app, hotbar, atlas.canvas, buildTimer);
 
   inventory.onToggle = (isOpen) => {
@@ -351,13 +362,27 @@ function boot(): void {
   const modeSwitcher = document.createElement("div");
   modeSwitcher.id = "mode-switcher";
   modeSwitcher.className = "mode-switcher";
+  const debugBadge = infiniteMode
+    ? `<span class="mode-debug-badge" style="background:#e67e22; color:#fff; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; letter-spacing:0.5px;">🛠️ デバッグ無限</span>`
+    : "";
+  const navLink = infiniteMode
+    ? `<a href="./index.html" class="mode-btn" style="text-decoration:none; display:flex; align-items:center; background:#34495e; color:#fff; font-size:12px;" title="通常モード（子ども用）へ移動">🌐 通常版へ</a>`
+    : `<a href="./debug.html" class="mode-btn" style="text-decoration:none; display:flex; align-items:center; background:#7f8c8d; color:#fff; font-size:12px;" title="建築無限モードへ移動">🛠️ デバッグ版</a>`;
+
   modeSwitcher.innerHTML = `
+    ${debugBadge}
     <button type="button" id="btn-mode-math" class="mode-btn mode-btn-math">✏️ もんだい (ブロック獲得)</button>
     <button type="button" id="btn-mode-build" class="mode-btn mode-btn-build active">🔨 けんちく</button>
-    <div id="mode-timer-badge" class="mode-timer-badge" title="けんちく残り時間 (1問正解で+20秒、最大5分)">⏱️ 00:00</div>
+    <div id="mode-timer-badge" class="mode-timer-badge" title="${infiniteMode ? "けんちく時間 (デバッグ無限モード)" : "けんちく残り時間 (1問正解で+20秒、最大5分)"}">⏱️ 00:00</div>
     <button type="button" id="btn-mode-help" class="mode-btn mode-btn-help" title="動かし方を見る">❓ そうさ方法</button>
+    ${navLink}
   `;
   app.appendChild(modeSwitcher);
+
+  // デバッグ無限モード時は初期モード選択をスキップして直接操作ガイドを表示
+  if (infiniteMode) {
+    showControlsGuide();
+  }
 
   function updateTimerBadge(): void {
     const timerBadge = document.querySelector<HTMLDivElement>("#mode-timer-badge");

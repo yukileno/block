@@ -84,4 +84,16 @@ describe("BuildTimer", () => {
     timer.addReward(20);
     expect(timer.isWarning).toBe(false);
   });
+
+  it("supports isInfinite mode with unlimited time and no countdown", () => {
+    const storage = memoryStorage();
+    const timer = new BuildTimer(storage, true);
+    expect(timer.isInfinite).toBe(true);
+    expect(timer.hasTime()).toBe(true);
+    expect(timer.isMax).toBe(true);
+    expect(timer.isWarning).toBe(false);
+    expect(timer.formattedTime).toBe("∞ 無制限");
+    expect(timer.tick(100)).toBe(false);
+    expect(timer.hasTime()).toBe(true);
+  });
 });
