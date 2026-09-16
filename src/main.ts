@@ -462,7 +462,7 @@ function boot(): void {
     pitch: () => player.eyePitch,
     mode: () => player.mode,
     renderer: () => view.kind,
-    touch: () => touchControls !== null,
+    touch: () => isTouchDevice(),
     loadedChunks: () => world.loadedChunkCount,
     meshedChunks: () => chunkMeshes?.meshedChunkCount ?? world.loadedChunkCount,
     pendingChunks: () => streamer.pendingCount,
@@ -482,7 +482,7 @@ function boot(): void {
     // trade resolution for a fluid frame rate on weaker (mobile) hardware.
     view.tickAdaptive?.(frameDelta);
 
-    if (touchControls && player.isActive !== touchVisible) {
+    if (player.isActive !== touchVisible) {
       touchVisible = player.isActive;
       touchControls.setVisible(touchVisible);
     }
