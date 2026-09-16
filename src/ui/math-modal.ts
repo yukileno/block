@@ -1,4 +1,5 @@
 import { generateProblem, type FractionProblem } from "../math/fraction";
+import { normalizeZenToHan, parseNumericInput } from "../math/normalize";
 import type { Hotbar } from "./hotbar";
 import { renderTileIcon } from "./hotbar";
 import type { BuildTimer } from "../game/build-timer";
@@ -185,8 +186,7 @@ export class MathModal {
   private getInputValue(selector: string): number {
     const el = document.querySelector<HTMLInputElement>(selector);
     if (!el) return 0;
-    const val = el.value.trim();
-    return val === "" ? 0 : Number(val);
+    return parseNumericInput(el.value);
   }
 
   private checkTongbun(): void {
@@ -290,6 +290,18 @@ export class MathModal {
         el.addEventListener("focus", () => {
           this.activeInput = el;
           el.select();
+        });
+        el.addEventListener("input", () => {
+          const normalized = normalizeZenToHan(el.value);
+          if (el.value !== normalized) {
+            el.value = normalized;
+          }
+        });
+        el.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            this.checkTongbun();
+          }
         });
         if (idx === 0) {
           el.focus();
