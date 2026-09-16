@@ -254,7 +254,7 @@ export class CpuRenderer {
     };
 
     // Day/night: block colors dim with the sun, sky comes pre-keyframed.
-    const light = Math.min(1, 0.3 + (0.7 * this.sky.sunIntensity) / 1.7);
+    const light = Math.min(1, 0.55 + (0.45 * this.sky.sunIntensity) / 2.3);
     const [skyR, skyG, skyB] = this.sky.skyColor;
     const horizonR = Math.min(1, skyR * 1.12 + 0.03) * 255;
     const horizonG = Math.min(1, skyG * 1.12 + 0.03) * 255;

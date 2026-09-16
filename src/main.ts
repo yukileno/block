@@ -428,24 +428,22 @@ function boot(): void {
     editStore.record(x, y, z, id);
   };
 
-  // On-screen controls for touch devices — joystick, look-drag, jump/place.
-  const touchControls = isTouchDevice()
-    ? new TouchControls(app, {
-        isActive: () => player.isActive,
-        onInput: (input) => {
-          player.setExternalInput(input);
-        },
-        onLook: (dx, dy) => {
-          player.lookBy(dx, dy);
-        },
-        onBreak: () => {
-          interaction.breakTargetedBlock();
-        },
-        onPlace: () => {
-          interaction.placeTargetedBlock();
-        },
-      })
-    : null;
+  // On-screen controls for touch devices and Chromebooks — joystick, action buttons.
+  const touchControls = new TouchControls(app, {
+    isActive: () => player.isActive,
+    onInput: (input) => {
+      player.setExternalInput(input);
+    },
+    onLook: (dx, dy) => {
+      player.lookBy(dx, dy);
+    },
+    onBreak: () => {
+      interaction.breakTargetedBlock();
+    },
+    onPlace: () => {
+      interaction.placeTargetedBlock();
+    },
+  });
   let touchVisible = false;
 
   const hud = new Hud(app);

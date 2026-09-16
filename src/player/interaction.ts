@@ -18,9 +18,9 @@ export interface ChunkVisualUpdater {
   updateChunk(cx: number, cz: number): void;
 }
 /** A press this short and still counts as a tap (drag-look mode: left-drag
- * looks around, a left tap breaks). */
-const TAP_MS = 300;
-const TAP_MAX_MOVE = 6;
+ * looks around, a left tap breaks). Tolerant of child finger taps on touchscreens. */
+const TAP_MS = 450;
+const TAP_MAX_MOVE = 25;
 
 /** Left click breaks the targeted block, right click places the hotbar's
  * selected block against the targeted face. Both are a raycast (reused
@@ -99,6 +99,17 @@ export class BlockInteraction {
     });
     window.addEventListener("blur", () => {
       this.stopRepeat();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (!this.controller.isActive || this.controller.isInventoryOpen) return;
+      if (e.code === "KeyF") {
+        e.preventDefault();
+        this.placeTargetedBlock();
+      } else if (e.code === "KeyQ") {
+        e.preventDefault();
+        this.breakTargetedBlock();
+      }
     });
   }
 

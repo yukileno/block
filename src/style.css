@@ -481,37 +481,73 @@ canvas {
   bottom: max(24px, env(safe-area-inset-bottom));
   display: none;
   flex-direction: row;
-  gap: 16px;
-  z-index: 6;
+  align-items: center;
+  gap: 12px;
+  z-index: 10;
 }
 
 .touch-button {
-  width: 68px;
-  height: 68px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.35);
-  border: 2px solid rgba(255, 255, 255, 0.45);
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 28px;
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  background: rgba(20, 20, 30, 0.65);
+  backdrop-filter: blur(4px);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  color: #ffffff;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   touch-action: none;
   user-select: none;
+  cursor: pointer;
+  transition:
+    transform 0.08s ease,
+    background 0.1s ease;
+}
+
+.touch-button .tb-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.touch-button .tb-label {
+  font-size: 11px;
+  font-weight: bold;
+  margin-top: 2px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.touch-button .tb-key {
+  font-size: 9px;
+  color: #f1c40f;
+  font-weight: bold;
+  opacity: 0.9;
+}
+
+.touch-button.touch-break {
+  border-color: rgba(231, 76, 60, 0.8);
+  background: rgba(192, 57, 43, 0.65);
+}
+
+.touch-button.touch-place {
+  border-color: rgba(46, 204, 113, 0.8);
+  background: rgba(39, 174, 96, 0.65);
+}
+
+.touch-button.touch-jump {
+  border-color: rgba(52, 152, 219, 0.8);
+  background: rgba(41, 128, 185, 0.65);
 }
 
 .touch-button:active {
-  background: rgba(255, 255, 255, 0.25);
+  transform: scale(0.92);
+  filter: brightness(1.25);
 }
 
-/* Touch devices: swap the instruction blocks and grow the tap targets. */
+/* Touch devices: adapt sizing and spacing. */
 @media (pointer: coarse) {
-  .controls-desktop {
-    display: none;
-  }
-  .controls-touch {
-    display: block;
-  }
   .hotbar-slot {
     width: 40px;
     height: 40px;
@@ -522,7 +558,13 @@ canvas {
   /* Lift the action buttons clear of the hotbar row on narrow portrait
      screens (the hotbar spans most of the width). */
   .touch-buttons {
-    bottom: calc(max(12px, env(safe-area-inset-bottom)) + 64px);
+    bottom: calc(max(12px, env(safe-area-inset-bottom)) + 68px);
+    right: 12px;
+    gap: 8px;
+  }
+  .touch-button {
+    width: 66px;
+    height: 66px;
   }
 }
 

@@ -69,8 +69,8 @@ export function createChunkMaterial(atlasArray: THREE.DataArrayTexture): THREE.S
     uniforms: {
       uAtlas: { value: atlasArray },
       uSunDir: { value: new THREE.Vector3(0.4, 0.85, 0.28).normalize() },
-      uSunIntensity: { value: 0.85 },
-      uAmbient: { value: 0.55 },
+      uSunIntensity: { value: 1.0 },
+      uAmbient: { value: 0.85 },
       uFogColor: { value: new THREE.Color(0x87ceeb) },
       uFogNear: { value: FOG_NEAR },
       uFogFar: { value: FOG_FAR },
@@ -92,9 +92,9 @@ export function updateChunkMaterial(material: THREE.ShaderMaterial, sky: CpuSkyS
   // The baked shade already carries most of the face lighting; the sun term
   // adds the moving directional highlight on top, scaled down so faces
   // never blow out at noon.
-  const day = sky.sunIntensity / 1.7;
-  if (u.uSunIntensity) u.uSunIntensity.value = 0.3 + 0.22 * day;
-  if (u.uAmbient) u.uAmbient.value = 0.5 + 0.28 * day;
+  const day = sky.sunIntensity / 2.3;
+  if (u.uSunIntensity) u.uSunIntensity.value = 0.45 + 0.35 * day;
+  if (u.uAmbient) u.uAmbient.value = 0.75 + 0.35 * day;
   const fog = u.uFogColor?.value as THREE.Color | undefined;
   fog?.setRGB(sky.skyColor[0], sky.skyColor[1], sky.skyColor[2]);
 }

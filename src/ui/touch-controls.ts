@@ -8,9 +8,10 @@
 const JOYSTICK_RADIUS = 56;
 const DEAD_ZONE = 0.16;
 const SPRINT_THRESHOLD = 0.92;
-/** A touch released within this distance/time counts as a tap, not a drag. */
-const TAP_MAX_MOVE = 12;
-const TAP_MAX_MS = 260;
+/** A touch released within this distance/time counts as a tap, not a drag.
+ * Relaxed for children and touchscreen sensitivity on Chromebooks/tablets. */
+const TAP_MAX_MOVE = 25;
+const TAP_MAX_MS = 450;
 
 export interface MoveVector {
   readonly forward: number;
@@ -99,21 +100,38 @@ export class TouchControls {
     this.buttons = document.createElement("div");
     this.buttons.className = "touch-buttons";
     this.buttons.append(
-      this.makeButton("touch-place", "▣", {
-        press: () => {
-          if (this.handlers.isActive()) this.handlers.onPlace();
+      this.makeButton(
+        "touch-break",
+        '<span class="tb-icon">🔨</span><span class="tb-label">こわす</span><span class="tb-key">Q</span>',
+        {
+          press: () => {
+            if (this.handlers.isActive()) this.handlers.onBreak();
+          },
         },
-      }),
-      this.makeButton("touch-jump", "⤒", {
-        press: () => {
-          this.jumpHeld = true;
-          this.emit();
+      ),
+      this.makeButton(
+        "touch-place",
+        '<span class="tb-icon">🧱</span><span class="tb-label">おく</span><span class="tb-key">F</span>',
+        {
+          press: () => {
+            if (this.handlers.isActive()) this.handlers.onPlace();
+          },
         },
-        release: () => {
-          this.jumpHeld = false;
-          this.emit();
+      ),
+      this.makeButton(
+        "touch-jump",
+        '<span class="tb-icon">⤒</span><span class="tb-label">とぶ</span><span class="tb-key">Space</span>',
+        {
+          press: () => {
+            this.jumpHeld = true;
+            this.emit();
+          },
+          release: () => {
+            this.jumpHeld = false;
+            this.emit();
+          },
         },
-      }),
+      ),
     );
 
     root.append(this.stickBase, this.buttons);
@@ -141,16 +159,15 @@ export class TouchControls {
 
   private makeButton(
     className: string,
-    label: string,
+    html: string,
     on: { press: () => void; release?: () => void },
   ): HTMLDivElement {
     const el = document.createElement("div");
     el.className = `touch-button ${className}`;
-    el.textContent = label;
+    el.innerHTML = html;
     el.addEventListener(
       "pointerdown",
       (e) => {
-        if (e.pointerType === "mouse") return;
         e.preventDefault();
         e.stopPropagation();
         on.press();

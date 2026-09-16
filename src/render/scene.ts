@@ -63,10 +63,10 @@ export function createGameScene(parent: HTMLElement): GameScene {
     FOG_FAR + 60,
   );
 
-  const sun = new THREE.DirectionalLight(0xffffff, 1.7);
+  const sun = new THREE.DirectionalLight(0xffffff, 2.3);
   sun.position.set(60, 120, 40);
   scene.add(sun);
-  const ambient = new THREE.AmbientLight(0xffffff, 0.55);
+  const ambient = new THREE.AmbientLight(0xffffff, 0.95);
   scene.add(ambient);
 
   function render(): void {

@@ -29,14 +29,14 @@ interface Keyframe {
 const DAYTIME_END = 0.6;
 
 const KEYFRAMES: readonly Keyframe[] = [
-  { phase: 0.0, sky: [255, 177, 110], sun: 0.7, ambient: 0.42 }, // sunrise
-  { phase: 0.1, sky: [135, 206, 235], sun: 1.7, ambient: 0.55 }, // morning
-  { phase: 0.45, sky: [135, 206, 235], sun: 1.7, ambient: 0.55 }, // afternoon
-  { phase: 0.55, sky: [255, 140, 90], sun: 0.7, ambient: 0.4 }, // sunset
-  { phase: 0.62, sky: [40, 42, 80], sun: 0.15, ambient: 0.24 }, // dusk
-  { phase: 0.75, sky: [12, 14, 34], sun: 0.05, ambient: 0.18 }, // night
-  { phase: 0.92, sky: [12, 14, 34], sun: 0.05, ambient: 0.18 }, // late night
-  { phase: 1.0, sky: [255, 177, 110], sun: 0.7, ambient: 0.42 }, // wraps to sunrise
+  { phase: 0.0, sky: [255, 195, 140], sun: 1.3, ambient: 0.7 }, // sunrise
+  { phase: 0.1, sky: [135, 206, 235], sun: 2.3, ambient: 0.95 }, // morning
+  { phase: 0.45, sky: [135, 206, 235], sun: 2.3, ambient: 0.95 }, // afternoon
+  { phase: 0.55, sky: [255, 175, 130], sun: 1.3, ambient: 0.7 }, // sunset
+  { phase: 0.62, sky: [80, 85, 130], sun: 0.5, ambient: 0.58 }, // dusk
+  { phase: 0.75, sky: [45, 50, 95], sun: 0.15, ambient: 0.48 }, // night
+  { phase: 0.92, sky: [45, 50, 95], sun: 0.15, ambient: 0.48 }, // late night
+  { phase: 1.0, sky: [255, 195, 140], sun: 1.3, ambient: 0.7 }, // wraps to sunrise
 ];
 
 function lerp(a: number, b: number, t: number): number {
