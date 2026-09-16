@@ -102,7 +102,7 @@ export class TouchControls {
     this.buttons.append(
       this.makeButton(
         "touch-break",
-        '<span class="tb-icon">🔨</span><span class="tb-label">こわす</span><span class="tb-key">Q</span>',
+        '<span class="tb-icon">🔨</span><span class="tb-label">こわす</span><span class="tb-key">N</span>',
         {
           press: () => {
             if (this.handlers.isActive()) this.handlers.onBreak();
@@ -111,7 +111,7 @@ export class TouchControls {
       ),
       this.makeButton(
         "touch-place",
-        '<span class="tb-icon">🧱</span><span class="tb-label">おく</span><span class="tb-key">F</span>',
+        '<span class="tb-icon">🧱</span><span class="tb-label">おく</span><span class="tb-key">M</span>',
         {
           press: () => {
             if (this.handlers.isActive()) this.handlers.onPlace();
