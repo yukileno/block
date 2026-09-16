@@ -435,13 +435,28 @@ canvas {
 
 #fps {
   position: fixed;
-  top: 8px;
-  left: 8px;
-  color: rgba(255, 255, 255, 0.7);
-  font-family: monospace;
-  font-size: 12px;
-  z-index: 5;
-  text-shadow: 0 0 2px #000;
+  top: 14px;
+  right: 14px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace, sans-serif;
+  font-size: 13px;
+  z-index: 25;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  user-select: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.15s ease;
+}
+
+#fps:hover {
+  background: rgba(0, 0, 0, 0.85);
+  border-color: #2ecc71;
+  transform: translateY(-1px);
 }
 
 /* --- Touch controls --- */
@@ -1418,4 +1433,264 @@ canvas {
 .timeup-actions {
   display: flex;
   justify-content: center;
+}
+
+/* ==========================================================================
+   Teleport Modal (/tp)
+   ========================================================================== */
+
+.teleport-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 150;
+  backdrop-filter: blur(4px);
+}
+
+.teleport-modal.hidden {
+  display: none !important;
+}
+
+.teleport-window {
+  background: #ffffff;
+  color: #2c3e50;
+  width: 90%;
+  max-width: 480px;
+  border-radius: 14px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: teleportPop 0.18s ease-out;
+}
+
+@keyframes teleportPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.teleport-header {
+  background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+  color: #fff;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.teleport-title {
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+}
+
+.teleport-close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.teleport-close-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.teleport-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.teleport-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.teleport-section-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #34495e;
+}
+
+.teleport-cmd-row {
+  display: flex;
+  gap: 8px;
+}
+
+.teleport-cmd-input {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 15px;
+  font-family: monospace;
+  border: 2px solid #bdc3c7;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.teleport-cmd-input:focus {
+  border-color: #3498db;
+}
+
+.teleport-action-btn {
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.teleport-action-btn.primary {
+  background: #27ae60;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);
+}
+
+.teleport-action-btn.primary:hover {
+  background: #2ecc71;
+  transform: translateY(-1px);
+}
+
+.teleport-hint {
+  font-size: 12px;
+  color: #7f8c8d;
+  line-height: 1.5;
+  background: #f8f9fa;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid #3498db;
+}
+
+.teleport-hint code {
+  background: #eef2f7;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: bold;
+  color: #2980b9;
+}
+
+.teleport-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  font-size: 12px;
+  color: #95a5a6;
+  font-weight: bold;
+}
+
+.teleport-divider::before,
+.teleport-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px dashed #dcdde1;
+}
+
+.teleport-divider::before {
+  margin-right: 10px;
+}
+
+.teleport-divider::after {
+  margin-left: 10px;
+}
+
+.teleport-xyz-row {
+  display: flex;
+  gap: 10px;
+}
+
+.teleport-coord-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: #f1f2f6;
+  border: 2px solid #ced6e0;
+  border-radius: 8px;
+  padding: 2px 10px;
+}
+
+.teleport-coord-box span {
+  font-weight: 900;
+  color: #747d8c;
+  margin-right: 6px;
+  font-size: 14px;
+}
+
+.teleport-coord-box input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  font-weight: bold;
+  color: #2f3542;
+  padding: 8px 0;
+}
+
+.teleport-helpers-row {
+  display: flex;
+  gap: 8px;
+}
+
+.teleport-sub-btn {
+  flex: 1;
+  background: #f1f2f6;
+  color: #2f3542;
+  border: 1px solid #ced6e0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.teleport-sub-btn:hover {
+  background: #e4e7eb;
+}
+
+.teleport-error {
+  background: #ffeaa7;
+  color: #d63031;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.teleport-error.hidden {
+  display: none;
+}
+
+.mode-btn-tp {
+  background: #2980b9;
+  border-color: #3498db;
+}
+
+.mode-btn-tp:hover {
+  background: #3498db;
 }

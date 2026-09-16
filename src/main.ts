@@ -14,10 +14,14 @@ import { Hotbar } from "./ui/hotbar";
 import { Hud } from "./ui/hud";
 import { Inventory } from "./ui/inventory";
 import { MathModal } from "./ui/math-modal";
+import { TeleportModal } from "./ui/teleport-modal";
 import { BuildTimer } from "./game/build-timer";
 import { isTouchDevice, TouchControls } from "./ui/touch-controls";
 import { EditStore } from "./world/edit-store";
 import { findPleasantSpawn } from "./world/spawn";
+import { isSolid } from "./world/blocks";
+import { CHUNK_HEIGHT } from "./world/coords";
+import { findGroundHeight } from "./player/physics";
 import {
   type ChunkGenerator,
   ChunkStreamer,
@@ -226,15 +230,20 @@ function boot(): void {
   const hotbar = new Hotbar(hotbarContainer, atlas.canvas, infiniteMode);
   const inventory = new Inventory(app, hotbar, atlas.canvas, infiniteMode);
   const mathModal = new MathModal(app, hotbar, atlas.canvas, buildTimer);
+  const teleportModal = new TeleportModal(app, () => ({
+    x: player.position.x,
+    y: player.position.y,
+    z: player.position.z,
+  }));
 
   inventory.onToggle = (isOpen) => {
-    player.setInventoryOpen(isOpen || mathModal.isOpen);
+    player.setInventoryOpen(isOpen || mathModal.isOpen || teleportModal.isOpen);
     if (isOpen) {
       savePlayerPosition();
     }
   };
   mathModal.onToggle = (isOpen) => {
-    player.setInventoryOpen(isOpen || inventory.isOpen);
+    player.setInventoryOpen(isOpen || inventory.isOpen || teleportModal.isOpen);
     if (isOpen) {
       savePlayerPosition();
     }
@@ -248,12 +257,56 @@ function boot(): void {
       showControlsGuide();
     }
   };
+  teleportModal.onToggle = (isOpen) => {
+    player.setInventoryOpen(isOpen || inventory.isOpen || mathModal.isOpen);
+    if (isOpen) {
+      savePlayerPosition();
+    }
+  };
+
+  teleportModal.onTeleport = (target) => {
+    if (target === "spawn") {
+      player.respawn(spawn.x, spawn.z);
+      savePlayerPosition();
+      showToast(`📍 スタート地点 (${spawn.x}, ${spawn.z}) にテレポートしました！`);
+      if (!player.isActive) player.requestControl();
+      return;
+    }
+    if (target === "top") {
+      const cur = player.position;
+      const groundY = findGroundHeight(
+        Math.floor(cur.x),
+        Math.floor(cur.z),
+        CHUNK_HEIGHT - 1,
+        (bx, by, bz) => isSolid(world.getBlock(bx, by, bz)),
+      );
+      player.teleport(cur.x, groundY, cur.z);
+      savePlayerPosition();
+      showToast(`📍 地表 (Y: ${groundY}) にテレポートしました！`);
+      if (!player.isActive) player.requestControl();
+      return;
+    }
+    const { x, z } = target;
+    let y = target.y;
+    if (y === null) {
+      y = findGroundHeight(Math.floor(x), Math.floor(z), CHUNK_HEIGHT - 1, (bx, by, bz) =>
+        isSolid(world.getBlock(bx, by, bz)),
+      );
+    }
+    streamer.warmUp(x, z, WARMUP_RADIUS_CHUNKS);
+    player.teleport(x, y, z);
+    savePlayerPosition();
+    showToast(`📍 (${Math.floor(x)}, ${Math.floor(y)}, ${Math.floor(z)}) にテレポートしました！`);
+    if (!player.isActive) player.requestControl();
+  };
 
   hotbar.onOpenInventory = () => {
     mathModal.close();
+    teleportModal.close();
     inventory.open();
   };
   inventory.onOpenMath = () => {
+    teleportModal.close();
     mathModal.open();
   };
 
@@ -374,6 +427,7 @@ function boot(): void {
     <button type="button" id="btn-mode-math" class="mode-btn mode-btn-math">✏️ もんだい (ブロック獲得)</button>
     <button type="button" id="btn-mode-build" class="mode-btn mode-btn-build active">🔨 けんちく</button>
     <div id="mode-timer-badge" class="mode-timer-badge" title="${infiniteMode ? "けんちく時間 (デバッグ無限モード)" : "けんちく残り時間 (1問正解で+20秒、最大5分)"}">⏱️ 00:00</div>
+    <button type="button" id="btn-mode-teleport" class="mode-btn mode-btn-tp" title="指定した座標へいどう (/tp)">📍 テレポート</button>
     <button type="button" id="btn-mode-help" class="mode-btn mode-btn-help" title="動かし方を見る">❓ そうさ方法</button>
     ${navLink}
   `;
@@ -398,6 +452,14 @@ function boot(): void {
     e.stopPropagation();
     mathModal.open();
     inventory.close();
+    teleportModal.close();
+  });
+
+  document.querySelector("#btn-mode-teleport")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    inventory.close();
+    mathModal.close();
+    teleportModal.open("/tp ");
   });
 
   document.querySelector("#btn-mode-build")?.addEventListener("click", (e) => {
@@ -408,6 +470,7 @@ function boot(): void {
       return;
     }
     mathModal.close();
+    teleportModal.close();
     if (!player.isActive) {
       player.requestControl();
     }
@@ -417,6 +480,7 @@ function boot(): void {
     e.stopPropagation();
     mathModal.close();
     inventory.close();
+    teleportModal.close();
     player.exitControl();
     showControlsGuide();
   });
@@ -472,6 +536,28 @@ function boot(): void {
   let touchVisible = false;
 
   const hud = new Hud(app);
+  hud.onClick = () => {
+    inventory.close();
+    mathModal.close();
+    teleportModal.open("/tp ");
+  };
+
+  // Keyboard shortcuts for command / teleport: Slash (/) or KeyT (t)
+  window.addEventListener("keydown", (e) => {
+    if (teleportModal.isOpen || inventory.isOpen || mathModal.isOpen) return;
+    if (!player.isActive) return;
+    if (e.code === "Slash" || e.key === "/" || e.key === "／") {
+      e.preventDefault();
+      inventory.close();
+      mathModal.close();
+      teleportModal.open("/tp ");
+    } else if (e.code === "KeyT") {
+      e.preventDefault();
+      inventory.close();
+      mathModal.close();
+      teleportModal.open("/tp ");
+    }
+  });
 
   window.addEventListener("resize", () => {
     view.resize(window.innerWidth, window.innerHeight);

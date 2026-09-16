@@ -15,10 +15,15 @@ export class Hud {
   private readonly el: HTMLDivElement;
   private frames = 0;
   private lastReport = 0;
+  public onClick?: () => void;
 
   constructor(parent: HTMLElement) {
     this.el = document.createElement("div");
     this.el.id = "fps";
+    this.el.title = "クリックして座標テレポート (/tp)";
+    this.el.addEventListener("click", () => {
+      this.onClick?.();
+    });
     parent.appendChild(this.el);
   }
 
@@ -28,8 +33,9 @@ export class Hud {
     const fps = Math.round((this.frames * 1000) / (nowMs - this.lastReport));
     this.frames = 0;
     this.lastReport = nowMs;
-    const pos = `${Math.floor(info.x).toString()}, ${Math.floor(info.y).toString()}, ${Math.floor(info.z).toString()}`;
-    const note = info.note ? ` · ${info.note}` : "";
-    this.el.textContent = `${fps.toString()} fps · (${pos}) · ${info.chunks.toString()} chunks · seed ${info.seed.toString()}${note}`;
+    const x = Math.floor(info.x);
+    const y = Math.floor(info.y);
+    const z = Math.floor(info.z);
+    this.el.innerHTML = `<span style="color:#2ecc71; margin-right:4px;">📍 座標:</span><b>X: ${x}　Y: ${y}　Z: ${z}</b> <span style="opacity:0.75; font-size:11px; margin-left:6px;">(${fps} fps)</span>`;
   }
 }
