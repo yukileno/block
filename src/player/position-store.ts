@@ -59,7 +59,7 @@ export class PlayerPositionStore {
     try {
       const raw = this.storage.getItem(this.key);
       if (!raw) return null;
-      const parsed = JSON.parse(raw);
+      const parsed: unknown = JSON.parse(raw);
       if (PlayerPositionStore.isValidTransform(parsed)) {
         return {
           x: parsed.x,
