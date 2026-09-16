@@ -28,10 +28,7 @@ const KEY_BINDINGS: Record<string, "forward" | "back" | "left" | "right" | "jump
 
 export type ControlMode = "idle" | "pointer" | "drag";
 
-/** Pointer-lock FPS movement with a graceful degradation path: if the
- * browser never grants pointer lock (extensions, permissions, embedded
- * contexts — it happens, silently), the game switches to drag-to-look
- * instead of leaving a dead "Click to play" button. The overlay/DOM dance
+/** Glues browser events to the pure player-physics simulation. Pointer-lock
  * and key tracking live here because they're inherently browser glue; the
  * actual physics is pure and tested separately. */
 export class PlayerController {
@@ -54,6 +51,7 @@ export class PlayerController {
     world: World,
     spawnX = 8,
     spawnZ = 8,
+    initialTransform?: Partial<PlayerTransform> | null,
   ) {
     this.camera = camera;
     this.camera.rotation.order = "YXZ";
@@ -61,14 +59,41 @@ export class PlayerController {
     this.overlay = document.querySelector("#overlay");
     this.world = world;
 
-    const groundY = findGroundHeight(
-      Math.floor(spawnX),
-      Math.floor(spawnZ),
-      CHUNK_HEIGHT - 1,
-      (x, y, z) => isSolid(this.world.getBlock(x, y, z)),
-    );
+    const targetX = initialTransform?.x ?? spawnX;
+    const targetZ = initialTransform?.z ?? spawnZ;
+    this.yaw = initialTransform?.yaw ?? 0;
+    this.pitch = initialTransform?.pitch ?? 0;
+
+    let targetY: number;
+    if (typeof initialTransform?.y === "number" && Number.isFinite(initialTransform.y)) {
+      const iy = initialTransform.y;
+      // 埋まりチェック: その場所の足元と頭が solid かどうか
+      const isStuck =
+        isSolid(this.world.getBlock(Math.floor(targetX), Math.floor(iy), Math.floor(targetZ))) ||
+        isSolid(
+          this.world.getBlock(Math.floor(targetX), Math.floor(iy + 1), Math.floor(targetZ)),
+        );
+      if (isStuck || iy < 0 || iy >= CHUNK_HEIGHT) {
+        targetY = findGroundHeight(
+          Math.floor(targetX),
+          Math.floor(targetZ),
+          CHUNK_HEIGHT - 1,
+          (x, y, z) => isSolid(this.world.getBlock(x, y, z)),
+        );
+      } else {
+        targetY = iy;
+      }
+    } else {
+      targetY = findGroundHeight(
+        Math.floor(targetX),
+        Math.floor(targetZ),
+        CHUNK_HEIGHT - 1,
+        (x, y, z) => isSolid(this.world.getBlock(x, y, z)),
+      );
+    }
+
     this.state = {
-      position: { x: spawnX, y: groundY, z: spawnZ },
+      position: { x: targetX, y: targetY, z: targetZ },
       velocity: { x: 0, y: 0, z: 0 },
       onGround: false,
     };
@@ -293,11 +318,42 @@ export class PlayerController {
     return this.state.position;
   }
 
+  get transform(): PlayerTransform {
+    return {
+      x: this.state.position.x,
+      y: this.state.position.y,
+      z: this.state.position.z,
+      yaw: this.yaw,
+      pitch: this.pitch,
+    };
+  }
+
   get eyeYaw(): number {
     return this.yaw;
   }
 
   get eyePitch(): number {
     return this.pitch;
+  }
+
+  teleport(x: number, y: number, z: number, yaw?: number, pitch?: number): void {
+    this.state = {
+      position: { x, y, z },
+      velocity: { x: 0, y: 0, z: 0 },
+      onGround: false,
+    };
+    if (typeof yaw === "number") this.yaw = yaw;
+    if (typeof pitch === "number") this.pitch = pitch;
+    this.syncCamera();
+  }
+
+  respawn(spawnX = 8, spawnZ = 8): void {
+    const groundY = findGroundHeight(
+      Math.floor(spawnX),
+      Math.floor(spawnZ),
+      CHUNK_HEIGHT - 1,
+      (x, y, z) => isSolid(this.world.getBlock(x, y, z)),
+    );
+    this.teleport(spawnX, groundY, spawnZ, 0, 0);
   }
 }

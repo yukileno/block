@@ -8,6 +8,7 @@ import { createGameScene } from "./render/scene";
 import { DAY_LENGTH_SECONDS, STARTUP_PHASE, skyStateAt } from "./render/sky";
 import { createBlockTextureArray, createTextureAtlas } from "./render/texture-atlas";
 import { PlayerController } from "./player/controller";
+import { PlayerPositionStore } from "./player/position-store";
 import { BlockInteraction } from "./player/interaction";
 import { Hotbar } from "./ui/hotbar";
 import { Hud } from "./ui/hud";
@@ -156,6 +157,7 @@ function boot(): void {
   }
 
   const editStore = new EditStore(window.localStorage, SEED);
+  const positionStore = new PlayerPositionStore(SEED);
   const streamer = new ChunkStreamer(world, {
     radius: view.kind === "webgl" ? STREAM_RADIUS_WEBGL : STREAM_RADIUS_CPU,
     editStore,
@@ -178,20 +180,53 @@ function boot(): void {
   streamer.attachGenerator(generator);
 
   const spawn = findPleasantSpawn(SEED);
+  const savedTransform = positionStore.load();
+  const startX = savedTransform?.x ?? spawn.x;
+  const startZ = savedTransform?.z ?? spawn.z;
   // Ground under the player's feet before the first frame; the rest streams in.
-  streamer.warmUp(spawn.x, spawn.z, WARMUP_RADIUS_CHUNKS);
+  streamer.warmUp(startX, startZ, WARMUP_RADIUS_CHUNKS);
 
   const buildTimer = new BuildTimer();
-  const player = new PlayerController(view.camera, view.domElement, world, spawn.x, spawn.z);
+  const player = new PlayerController(
+    view.camera,
+    view.domElement,
+    world,
+    spawn.x,
+    spawn.z,
+    savedTransform,
+  );
+
+  const savePlayerPosition = (): void => {
+    if (player.position.y >= 0 && player.position.y <= 256) {
+      positionStore.save(player.transform);
+    }
+  };
+
+  window.addEventListener("beforeunload", () => {
+    savePlayerPosition();
+  });
+  window.addEventListener("pagehide", () => {
+    savePlayerPosition();
+  });
+  player.onEnterIdle = () => {
+    savePlayerPosition();
+  };
+
   const hotbar = new Hotbar(hotbarContainer, atlas.canvas);
   const inventory = new Inventory(app, hotbar, atlas.canvas);
   const mathModal = new MathModal(app, hotbar, atlas.canvas, buildTimer);
 
   inventory.onToggle = (isOpen) => {
     player.setInventoryOpen(isOpen || mathModal.isOpen);
+    if (isOpen) {
+      savePlayerPosition();
+    }
   };
   mathModal.onToggle = (isOpen) => {
     player.setInventoryOpen(isOpen || inventory.isOpen);
+    if (isOpen) {
+      savePlayerPosition();
+    }
     const mathBtn = document.querySelector("#btn-mode-math");
     const buildBtn = document.querySelector("#btn-mode-build");
     if (mathBtn && buildBtn) {
@@ -264,6 +299,7 @@ function boot(): void {
 
   function handleTimeUp(): void {
     player.exitControl();
+    savePlayerPosition();
     showTimeUpModal();
   }
 
@@ -305,6 +341,7 @@ function boot(): void {
 
   // When player exits pointer lock / goes idle, show controls guide (pause screen)
   player.onEnterIdle = () => {
+    savePlayerPosition();
     if (!mathModal.isOpen && !inventory.isOpen && buildTimer.hasTime()) {
       showControlsGuide();
     }
@@ -436,6 +473,7 @@ function boot(): void {
 
   const startedAt = performance.now();
   let lastTime = startedAt;
+  let lastPositionSaveTime = 0;
   const frame = (time: number): void => {
     const frameDelta = time - lastTime;
     const dt = Math.min(frameDelta / 1000, 0.1); // clamp to avoid a huge step after a tab switch
@@ -453,6 +491,21 @@ function boot(): void {
 
     streamer.update(player.position.x, player.position.z);
     player.update(dt);
+
+    // 奈落落下安全ネット (Void Safety Net)
+    if (player.position.y < -20) {
+      player.respawn(spawn.x, spawn.z);
+      savePlayerPosition();
+    }
+
+    // プレイヤー位置の定期保存（1秒間隔）
+    lastPositionSaveTime += dt;
+    if (lastPositionSaveTime >= 1.0) {
+      lastPositionSaveTime = 0;
+      if (player.isActive) {
+        savePlayerPosition();
+      }
+    }
 
     for (const { cx, cz } of streamer.drainDirty(MESH_BUDGET_PER_FRAME)) {
       chunkMeshes?.updateChunk(cx, cz);
