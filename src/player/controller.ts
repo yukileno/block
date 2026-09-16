@@ -8,6 +8,7 @@ import {
   type PlayerPhysicsState,
   stepPhysics,
 } from "./physics";
+import type { PlayerTransform } from "./position-store";
 
 const MOUSE_SENSITIVITY = 0.0022;
 const DRAG_SENSITIVITY = 0.0035;
