@@ -29,12 +29,19 @@ export class BuildTimer {
   public readonly isInfinite: boolean;
 
   constructor(
-    storage: KeyValueStorage | null = typeof localStorage !== "undefined" ? localStorage : null,
+    storageOrInfinite: KeyValueStorage | null | boolean = typeof localStorage !== "undefined"
+      ? localStorage
+      : null,
     isInfinite = false,
   ) {
-    this.storage = storage;
-    this.isInfinite = isInfinite;
-    this.remaining = isInfinite ? Infinity : this.load();
+    if (typeof storageOrInfinite === "boolean") {
+      this.isInfinite = storageOrInfinite;
+      this.storage = typeof localStorage !== "undefined" ? localStorage : null;
+    } else {
+      this.storage = storageOrInfinite;
+      this.isInfinite = isInfinite;
+    }
+    this.remaining = this.isInfinite ? Infinity : this.load();
   }
 
   private load(): number {

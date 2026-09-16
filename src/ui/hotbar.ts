@@ -229,7 +229,7 @@ export class Hotbar {
   /** Consumes 1 block from the currently selected slot. Returns false if no blocks left. */
   public consumeSelectedBlock(): boolean {
     const current = this.slots[this.selectedIndex];
-    if (!current?.blockId || current.blockId === BlockId.AIR) {
+    if (!current?.blockId) {
       return false;
     }
     if (this.isInfinite) {
@@ -251,7 +251,7 @@ export class Hotbar {
   public hasSelectedBlock(): boolean {
     const current = this.slots[this.selectedIndex];
     if (this.isInfinite) {
-      return current?.blockId != null && current.blockId !== BlockId.AIR;
+      return current?.blockId != null;
     }
     return current?.blockId != null && current.count > 0;
   }
