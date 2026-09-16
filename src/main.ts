@@ -287,12 +287,11 @@ function boot(): void {
       return;
     }
     const { x, z } = target;
-    let y = target.y;
-    if (y === null) {
-      y = findGroundHeight(Math.floor(x), Math.floor(z), CHUNK_HEIGHT - 1, (bx, by, bz) =>
+    const y =
+      target.y ??
+      findGroundHeight(Math.floor(x), Math.floor(z), CHUNK_HEIGHT - 1, (bx, by, bz) =>
         isSolid(world.getBlock(bx, by, bz)),
       );
-    }
     streamer.warmUp(x, z, WARMUP_RADIUS_CHUNKS);
     player.teleport(x, y, z);
     savePlayerPosition();

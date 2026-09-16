@@ -14,7 +14,7 @@ export type ParseResult =
 export function normalizeCommandInput(input: string): string {
   return input
     .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
-    .replace(/　/g, " ") // full-width space
+    .replace(/\u3000/g, " ") // full-width space
     .replace(/〜/g, "~")
     .replace(/ー/g, "-")
     .replace(/−/g, "-")

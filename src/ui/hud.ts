@@ -36,6 +36,6 @@ export class Hud {
     const x = Math.floor(info.x);
     const y = Math.floor(info.y);
     const z = Math.floor(info.z);
-    this.el.innerHTML = `<span style="color:#2ecc71; margin-right:4px;">📍 座標:</span><b>X: ${x}　Y: ${y}　Z: ${z}</b> <span style="opacity:0.75; font-size:11px; margin-left:6px;">(${fps} fps)</span>`;
+    this.el.innerHTML = `<span style="color:#2ecc71; margin-right:4px;">📍 座標:</span><b>X: ${x}  Y: ${y}  Z: ${z}</b> <span style="opacity:0.75; font-size:11px; margin-left:6px;">(${fps} fps)</span>`;
   }
 }

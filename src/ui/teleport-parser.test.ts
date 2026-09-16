@@ -3,7 +3,7 @@ import { normalizeCommandInput, parseTeleportCommand } from "./teleport-parser";
 
 describe("normalizeCommandInput", () => {
   it("converts full-width numbers and spaces", () => {
-    expect(normalizeCommandInput("　１００　６４　２００　")).toBe("100 64 200");
+    expect(normalizeCommandInput("\u3000１００\u3000６４\u3000２００\u3000")).toBe("100 64 200");
   });
 });
 

@@ -149,9 +149,9 @@ export class TeleportModal {
     curPosBtn.textContent = "📍 現在地をコピー";
     curPosBtn.addEventListener("click", () => {
       const p = this.getCurrentPos();
-      this.inputX!.value = Math.floor(p.x).toString();
-      this.inputY!.value = Math.floor(p.y).toString();
-      this.inputZ!.value = Math.floor(p.z).toString();
+      if (this.inputX) this.inputX.value = Math.floor(p.x).toString();
+      if (this.inputY) this.inputY.value = Math.floor(p.y).toString();
+      if (this.inputZ) this.inputZ.value = Math.floor(p.z).toString();
     });
 
     const spawnBtn = document.createElement("button");
