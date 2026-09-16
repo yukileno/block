@@ -103,10 +103,10 @@ export class BlockInteraction {
 
     document.addEventListener("keydown", (e) => {
       if (!this.controller.isActive || this.controller.isInventoryOpen) return;
-      if (e.code === "KeyF") {
+      if (e.code === "KeyM") {
         e.preventDefault();
         this.placeTargetedBlock();
-      } else if (e.code === "KeyQ") {
+      } else if (e.code === "KeyN") {
         e.preventDefault();
         this.breakTargetedBlock();
       }
