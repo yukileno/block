@@ -71,9 +71,7 @@ export class PlayerController {
       // 埋まりチェック: その場所の足元と頭が solid かどうか
       const isStuck =
         isSolid(this.world.getBlock(Math.floor(targetX), Math.floor(iy), Math.floor(targetZ))) ||
-        isSolid(
-          this.world.getBlock(Math.floor(targetX), Math.floor(iy + 1), Math.floor(targetZ)),
-        );
+        isSolid(this.world.getBlock(Math.floor(targetX), Math.floor(iy + 1), Math.floor(targetZ)));
       if (isStuck || iy < 0 || iy >= CHUNK_HEIGHT) {
         targetY = findGroundHeight(
           Math.floor(targetX),
