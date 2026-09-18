@@ -95,10 +95,9 @@ interface GameView {
 function isInfiniteMode(): boolean {
   const params = new URLSearchParams(window.location.search);
   return (
-    window.location.pathname.endsWith("debug.html") ||
-    window.location.pathname.includes("debug") ||
-    params.has("debug") ||
-    params.get("mode") === "infinite"
+    window.location.pathname.endsWith("sensei.html") ||
+    window.location.pathname.includes("sensei") ||
+    params.has("sensei")
   );
 }
 
@@ -415,11 +414,11 @@ function boot(): void {
   modeSwitcher.id = "mode-switcher";
   modeSwitcher.className = "mode-switcher";
   const debugBadge = infiniteMode
-    ? `<span class="mode-debug-badge" style="background:#e67e22; color:#fff; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; letter-spacing:0.5px;">🛠️ デバッグ無限</span>`
+    ? `<span class="mode-debug-badge" style="background:#e67e22; color:#fff; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; letter-spacing:0.5px;">🛠️ 先生モード</span>`
     : "";
   const navLink = infiniteMode
     ? `<a href="./index.html" class="mode-btn" style="text-decoration:none; display:flex; align-items:center; background:#34495e; color:#fff; font-size:12px;" title="通常モード（子ども用）へ移動">🌐 通常版へ</a>`
-    : `<a href="./debug.html" class="mode-btn" style="text-decoration:none; display:flex; align-items:center; background:#7f8c8d; color:#fff; font-size:12px;" title="建築無限モードへ移動">🛠️ デバッグ版</a>`;
+    : "";
 
   modeSwitcher.innerHTML = `
     ${debugBadge}

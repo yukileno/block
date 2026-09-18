@@ -9,7 +9,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
-        debug: resolve(__dirname, "debug.html"),
+        sensei: resolve(__dirname, "sensei.html"),
       },
     },
   },
